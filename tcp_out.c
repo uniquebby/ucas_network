@@ -85,12 +85,12 @@ void tcp_send_packet(struct tcp_sock *tsk, char *packet, int len)
 void tcp_send_control_packet(struct tcp_sock *tsk, u8 flags)
 {
     int pkt_size = ETHER_HDR_SIZE + IP_BASE_HDR_SIZE + TCP_BASE_HDR_SIZE;
-    char *packet = malloc(pkt_size);
+    char *packet = (char *)malloc(pkt_size);
     if (!packet) {
         log(ERROR, "malloc tcp control packet failed.");
         return ;
     }
-
+    log(DEBUG, "malloc tcp control packet successed.");
     struct iphdr *ip = packet_to_ip_hdr(packet);
     struct tcphdr *tcp = (struct tcphdr *)((char *)ip + IP_BASE_HDR_SIZE);
 
@@ -101,10 +101,14 @@ void tcp_send_control_packet(struct tcp_sock *tsk, u8 flags)
             tsk->rcv_nxt, flags, tsk->rcv_wnd);
 
     tcp->checksum = tcp_checksum(ip, tcp);
+    log(DEBUG, "tcp_send_control_packet: tcp_checsum done.");
 
     if (flags & (TCP_SYN|TCP_FIN)) {
  	    //把发送的包加入到send_buf中
  	    struct packet_link_node *pkt_node = (struct packet_link_node*)malloc(sizeof(struct packet_link_node));
+		if (!pkt_node)
+        	log(ERROR, "tcp_send_control_packet: malloc pkt_node failed.");
+       	log(DEBUG, "tcp_send_control_packet: malloc pkt_node successed.");
    	    pkt_node->packet = packet;
    	    pkt_node->len = pkt_size;
     	pkt_node->seq = tsk->snd_nxt;
