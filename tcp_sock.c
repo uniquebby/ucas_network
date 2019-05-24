@@ -58,6 +58,8 @@ struct tcp_sock *alloc_tcp_sock()
 	init_list_head(&tsk->listen_queue);
 	init_list_head(&tsk->accept_queue);
 
+	init_list_head(&tsk->send_buf);		//modified
+
 	tsk->rcv_buf = alloc_ring_buffer(tsk->rcv_wnd);
 
 	tsk->wait_connect = alloc_wait_struct();

@@ -105,7 +105,7 @@ void tcp_send_control_packet(struct tcp_sock *tsk, u8 flags)
 
     if (flags & (TCP_SYN|TCP_FIN)) {
  	    //把发送的包加入到send_buf中
- 	    struct packet_link_node *pkt_node = (struct packet_link_node*)malloc(sizeof(struct packet_link_node));
+ 	    struct packet_link_node *pkt_node = (struct packet_link_node *)malloc(sizeof(struct packet_link_node));
 		if (!pkt_node)
         	log(ERROR, "tcp_send_control_packet: malloc pkt_node failed.");
        	log(DEBUG, "tcp_send_control_packet: malloc pkt_node successed.");
@@ -118,7 +118,7 @@ void tcp_send_control_packet(struct tcp_sock *tsk, u8 flags)
 
         tsk->snd_nxt += 1;
 
-    //开启定时器
+    	//开启定时器
        	log(DEBUG, "tcp_send_control_packet: malloc pkt_node successed 3.");
     if (!tsk->retrans_timer.enable)
         tcp_set_retrans_timer(tsk);
