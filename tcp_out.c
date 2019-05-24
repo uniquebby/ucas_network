@@ -112,11 +112,14 @@ void tcp_send_control_packet(struct tcp_sock *tsk, u8 flags)
    	    pkt_node->packet = packet;
    	    pkt_node->len = pkt_size;
     	pkt_node->seq = tsk->snd_nxt;
+       	log(DEBUG, "tcp_send_control_packet: malloc pkt_node successed 1.");
     	list_add_tail(&pkt_node->list, &tsk->send_buf);
+       	log(DEBUG, "tcp_send_control_packet: malloc pkt_node successed 2.");
 
         tsk->snd_nxt += 1;
 
     //开启定时器
+       	log(DEBUG, "tcp_send_control_packet: malloc pkt_node successed 3.");
     if (!tsk->retrans_timer.enable)
         tcp_set_retrans_timer(tsk);
 		log(DEBUG, "tcp_send_control_packet: tcp_set_retrans_timer successed.");
