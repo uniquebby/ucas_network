@@ -276,9 +276,9 @@ int tcp_sock_connect(struct tcp_sock *tsk, struct sock_addr *skaddr)
 
     tcp_bind_hash(tsk);     //占用一个端口的sock要hash到bind table中
 
-    tcp_set_state(tsk, TCP_SYN_SENT);
     tcp_hash(tsk);
     tcp_send_control_packet(tsk, TCP_SYN);
+    tcp_set_state(tsk, TCP_SYN_SENT);
     sleep_on(tsk->wait_connect);
 
     return 0;
