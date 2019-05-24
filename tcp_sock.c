@@ -272,13 +272,15 @@ int tcp_sock_connect(struct tcp_sock *tsk, struct sock_addr *skaddr)
     tsk->sk_dip = htonl(skaddr->ip);
     tsk->sk_dport = htons(skaddr->port);
     tsk->sk_sip = iface->ip;
-    tsk->sk_sport = htons(tcp_get_port());
+    tcp_sock_set_sport(tsk, htons(tcp_get_port()));
 
-    tcp_bind_hash(tsk);     //占用一个端口的sock要hash到bind table中
+//    tcp_bind_hash(tsk);     //占用一个端口的sock要hash到bind table中
 
-    tcp_hash(tsk);
-    tcp_send_control_packet(tsk, TCP_SYN);
     tcp_set_state(tsk, TCP_SYN_SENT);
+    tcp_hash(tsk);
+	log(DEBUG, "tcp_sock_connect: tcp_hash done.");
+    tcp_send_control_packet(tsk, TCP_SYN);
+	log(DEBUG, "tcp_sock_connect: tcp_send_control_packet done.");
     sleep_on(tsk->wait_connect);
 
     return 0;

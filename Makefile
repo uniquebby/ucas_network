@@ -8,7 +8,7 @@ LD = gcc
 CFLAGS = -g -Wall -Iinclude
 LDFLAGS = -L.
 
-LIBS = -lipstack -lpthread -lm 			#-lm 连接math库
+LIBS = -lipstack -lpthread 			#-lm 连接math库
 
 HDRS = ./include/*.h
 

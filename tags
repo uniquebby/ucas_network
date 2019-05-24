@@ -52,7 +52,7 @@ IP_HDR_SIZE	include/ip.h	/^#define IP_HDR_SIZE(/;"	d
 LD	Makefile	/^LD = gcc$/;"	m
 LDFLAGS	Makefile	/^LDFLAGS = -L.$/;"	m
 LE_IP_FMT_STR	include/ip.h	/^#define LE_IP_FMT_STR(/;"	d
-LIBS	Makefile	/^LIBS = -lipstack -lpthread -lm 			#-lm 连接math库$/;"	m
+LIBS	Makefile	/^LIBS = -lipstack -lpthread 			#-lm 连接math库$/;"	m
 MAX_ARP_SIZE	include/arpcache.h	/^#define MAX_ARP_SIZE /;"	d
 MSS	include/my.h	/^#define MSS /;"	d
 NET_IP_FMT_STR	include/ip.h	/^#define NET_IP_FMT_STR(/;"	d
