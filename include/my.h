@@ -5,6 +5,8 @@
 #include "ether.h"
 #include "list.h"
 #include "tcp.h"
+#include "log.h"
+
 #define MSS ETH_FRAME_LEN - IP_BASE_HDR_SIZE - TCP_BASE_HDR_SIZE
 
 
@@ -18,12 +20,14 @@ struct packet_link_node{
 };
 
 static inline void resend(struct tcp_sock *tsk) {
+	log(DEBUG, "resend: resend a packet");
     struct packet_link_node *pkt_node = list_entry(tsk->send_buf.next, struct packet_link_node, list);
     tsk->inflight += pkt_node->tcp_data_len;
     ip_send_packet(pkt_node->packet, pkt_node->len);
-};
+}
 
 static inline void update_snd_buf(struct tcp_sock *tsk, struct tcp_cb *cb) {
+	log(DEBUG, "update_snd_buf");
     struct packet_link_node *pkt;
     //delete pkt from send_buf which has been ack by peer
     list_for_each_entry(pkt, &tsk->send_buf, list) {

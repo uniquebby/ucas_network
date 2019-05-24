@@ -67,10 +67,13 @@ void tcp_send_packet(struct tcp_sock *tsk, char *packet, int len)
     //tsk->snd_wnd -= tcp_data_len;             源代码中有的，觉得有问题所以注释掉
     
     //开启定时器
-    if (!tsk->retrans_timer.enable)
+    if (!tsk->retrans_timer.enable) {
         tcp_set_retrans_timer(tsk);
+		log(DEBUG, "tcp_send_packet: tcp_set_retrans_timer successed.");
+	}
     
     ip_send_packet(packet, len);
+	log(DEBUG, "tcp_send_packet: send a data pkt successed.");
 }
 
 
@@ -99,22 +102,24 @@ void tcp_send_control_packet(struct tcp_sock *tsk, u8 flags)
 
     tcp->checksum = tcp_checksum(ip, tcp);
 
-    //把发送的包加入到send_buf中
-    struct packet_link_node *pkt_node = (struct packet_link_node*)malloc(sizeof(struct packet_link_node));
-    pkt_node->packet = packet;
-    pkt_node->len = pkt_size;
-    pkt_node->seq = tsk->snd_nxt;
-    list_add_tail(&pkt_node->list, &tsk->send_buf);
-
     if (flags & (TCP_SYN|TCP_FIN)) {
+ 	    //把发送的包加入到send_buf中
+ 	    struct packet_link_node *pkt_node = (struct packet_link_node*)malloc(sizeof(struct packet_link_node));
+   	    pkt_node->packet = packet;
+   	    pkt_node->len = pkt_size;
+    	pkt_node->seq = tsk->snd_nxt;
+    	list_add_tail(&pkt_node->list, &tsk->send_buf);
+
         tsk->snd_nxt += 1;
 
     //开启定时器
     if (!tsk->retrans_timer.enable)
         tcp_set_retrans_timer(tsk);
+		log(DEBUG, "tcp_send_control_packet: tcp_set_retrans_timer successed.");
 	}
 
     ip_send_packet(packet, pkt_size);
+	log(DEBUG, "tcp_send_control_packet: send a control pkt successed.");
 }
 
 // send tcp reset packet

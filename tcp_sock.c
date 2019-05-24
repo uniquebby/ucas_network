@@ -292,7 +292,7 @@ int tcp_sock_listen(struct tcp_sock *tsk, int backlog)
     int r = 0;
 
     tsk->backlog = backlog;
-    tsk->state = TCP_LISTEN;
+	tcp_set_state(tsk, TCP_LISTEN);
 
     r = tcp_hash(tsk);
 

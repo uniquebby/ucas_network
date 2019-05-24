@@ -3,10 +3,10 @@
 #include "tcp_sock.h"
 
 #include "my.h"
+#include "log.h"
 
 #include <stdio.h>
 #include <unistd.h>
-#include <math.h> 	//modified
 
 static struct list_head timer_list;
 
@@ -20,6 +20,7 @@ void tcp_scan_timer_list()
     list_for_each_entry_safe(t, q, &timer_list, list) {
         t->timeout -= TCP_TIMER_SCAN_INTERVAL;
         if (t->timeout <= 0) {
+			log(DEBUG, "tcp_scan_timer_list: timeout at a timewait timer.");
             if (t->type == 0) { //等待定时
                 list_delete_entry(&t->list);
                 tsk = timewait_to_tcp_sock(t);
@@ -29,6 +30,7 @@ void tcp_scan_timer_list()
                 free_tcp_sock(tsk);
             }
             else {  //超时重传
+				log(DEBUG, "tcp_scan_timer_list: timeout at a retranstimer.");
                 if (t->enable >= 3) {
                     tsk = retranstimer_to_tcp_sock(t);
                     list_delete_entry(&t->list);
@@ -47,9 +49,13 @@ void tcp_scan_timer_list()
                 tsk->cwnd = TCP_DEFAULT_WINDOW;
                 tsk->cstate = TCP_COPEN;
 
-                t->enable++; 
-                t->timeout = (int)pow(TCP_RETRANS_INTERVAL_INITIAL, (t->enable));        //定时器翻倍
+           		//     t->timeout = (int)pow(TCP_RETRANS_INTERVAL_INITIAL, (t->enable));        //定时器翻倍
                 resend(tsk);
+				//记录重传次数
+                t->enable++; 
+    			//定时器翻倍
+				for (int i = t->enable; i > 1; i--)
+					t->timeout *= t->timeout; 
             }
         }
     }
@@ -58,6 +64,7 @@ void tcp_scan_timer_list()
 void tcp_set_timewait_timer(struct tcp_sock *tsk)
 {
 //  fprintf(stdout, "TODO: implement %s please.\n", __FUNCTION__);
+	log(DEBUG, "tcp_timer.c,,,tcp_set_timewait_timer .");
     tsk->timewait.type = 0;
     tsk->timewait.timeout = TCP_TIMEWAIT_TIMEOUT;
     tsk->timewait.enable = 1;
@@ -68,6 +75,7 @@ void tcp_set_timewait_timer(struct tcp_sock *tsk)
 void tcp_set_retrans_timer(struct tcp_sock *tsk)
 {
 //  fprintf(stdout, "TODO: implement %s please.\n", __FUNCTION__);
+	log(DEBUG, "tcp_timer.c,,,tcp_set_retrans_timer .");
     tsk->retrans_timer.type = 1;
     tsk->retrans_timer.timeout = TCP_RETRANS_INTERVAL_INITIAL;
     tsk->retrans_timer.enable = 1;  //重传次数
@@ -78,6 +86,7 @@ void tcp_set_retrans_timer(struct tcp_sock *tsk)
 void tcp_unset_retrans_timer(struct tcp_sock *tsk)
 {
 //  fprintf(stdout, "TODO: implement %s please.\n", __FUNCTION__);
+	log(DEBUG, "tcp_timer.c,,,tcp_unset_retrans_timer .");
     list_delete_entry(&tsk->retrans_timer.list);
 }
 
