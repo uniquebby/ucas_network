@@ -198,6 +198,7 @@ static int tcp_sock_set_sport(struct tcp_sock *tsk, u16 port)
 
 	tsk->sk_sport = port;
 
+	log(DEBUG, "tcp_sock_set_sport: bind to port %hu ", ntohs(port));
 	tcp_bind_hash(tsk);
 
 	return 0;
