@@ -20,8 +20,8 @@ void tcp_scan_timer_list()
     list_for_each_entry_safe(t, q, &timer_list, list) {
         t->timeout -= TCP_TIMER_SCAN_INTERVAL;
         if (t->timeout <= 0) {
-			log(DEBUG, "tcp_scan_timer_list: timeout at a timewait timer.");
             if (t->type == 0) { //等待定时
+				log(DEBUG, "tcp_scan_timer_list: timeout at a timewait timer.");
                 list_delete_entry(&t->list);
                 tsk = timewait_to_tcp_sock(t);
                 if (!tsk->parent)

@@ -120,7 +120,7 @@ void tcp_send_control_packet(struct tcp_sock *tsk, u8 flags)
 
     	//开启定时器
        	log(DEBUG, "tcp_send_control_packet: malloc pkt_node successed 3.");
-    if (!tsk->retrans_timer.enable)
+    if (!(tsk->retrans_timer.enable))
         tcp_set_retrans_timer(tsk);
 		log(DEBUG, "tcp_send_control_packet: tcp_set_retrans_timer successed.");
 	}

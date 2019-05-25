@@ -216,6 +216,7 @@ int tcp_hash(struct tcp_sock *tsk)
 	if (tsk->state == TCP_LISTEN) {
 		hash = tcp_hash_function(0, 0, tsk->sk_sport, 0);
 		list = &tcp_listen_sock_table[hash];
+		log(DEBUG, "tcp_hash: hash to listen list with port %hu.", ntohs(tsk->sk_sport));
 	}
 	else {
 		int hash = tcp_hash_function(tsk->sk_sip, tsk->sk_dip, \
@@ -230,6 +231,7 @@ int tcp_hash(struct tcp_sock *tsk)
 					tsk->sk_dport == tmp->sk_dport)
 				return -1;
 		}
+		log(DEBUG, "tcp_hash: hash to established list with port %hu.", ntohs(tsk->sk_sport));
 	}
 
 	list_add_head(&tsk->hash_list, list);
