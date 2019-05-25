@@ -182,8 +182,10 @@ static int tcp_port_in_use(u16 sport)
 static u16 tcp_get_port()
 {
 	for (u16 port = PORT_MIN; port < PORT_MAX; port++) {
-		if (!tcp_port_in_use(port))
+		if (!tcp_port_in_use(port)) {
+			log(DEBUG, "tcp_get_port: %hu", ntohs(port));
 			return port;
+		}
 	}
 
 	return 0;
