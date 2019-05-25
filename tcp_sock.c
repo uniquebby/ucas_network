@@ -194,6 +194,7 @@ static u16 tcp_get_port()
 // tcp sock tries to use port as its source port
 static int tcp_sock_set_sport(struct tcp_sock *tsk, u16 port)
 {
+	log(DEBUG, "tcp_sock_set_sport: will to bind to port %hu ", ntohs(port));
 	if ((port && tcp_port_in_use(port)) ||
 			(!port && !(port = tcp_get_port())))
 		return -1;
