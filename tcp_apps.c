@@ -16,6 +16,9 @@ void *tcp_server(void *arg)
 	struct sock_addr addr;
 	addr.ip = htonl(0);
 	addr.port = port;
+
+	log(DEBUG, "tcp_server: recv port %hu.", ntohs(addr.port));
+	
 	if (tcp_sock_bind(tsk, &addr) < 0) {
 		log(ERROR, "tcp_sock bind to port %hu failed", ntohs(port));
 		exit(1);
