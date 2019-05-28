@@ -7,6 +7,7 @@
 #include "log.h"
 
 #include "my.h"
+#include "synch_wait.h"
 
 // TCP socks should be hashed into table for later lookup: Those which
 // occupy a port (either by *bind* or *connect*) should be hashed into
@@ -384,19 +385,18 @@ int tcp_sock_read(struct tcp_sock *tsk, char *buf, int size)
 //  fprintf(stdout, "TODO: implement %s please.\n", __FUNCTION__);
     int read_len = 0;
 
-    if (ring_buffer_empty(tsk->rcv_buf)) {
+    while (ring_buffer_empty(tsk->rcv_buf) && tsk->state != TCP_LAST_ACK) {
 				log(DEBUG, "tcp_sock_reak: try to sleep on a wait_recv");
-        if (sleep_on(tsk->wait_recv) < 0)
-            return -1;
+        sleep_on(tsk->wait_recv); 
 		}
 
-		pthread_mutex_lock(&tsk->wait_rw->lock);
+//		pthread_mutex_lock(&tsk->wait_recv->lock);
+		log(DEBUG, "tcp_sock_reak: now the buf in used is %d**********************************************", ring_buffer_used(tsk->rcv_buf));
     read_len = read_ring_buffer(tsk->rcv_buf, buf, size);
     tsk->rcv_wnd += read_len;
 		log(DEBUG, "tcp_sock_reak: read buffer with len = %d", read_len);
 
-		pthread_mutex_unlock(&tsk->wait_rw->lock);
-
+//		pthread_mutex_unlock(&tsk->wait_recv->lock);
     return read_len;
 }
 

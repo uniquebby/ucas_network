@@ -3,6 +3,7 @@
 #include "tcp_timer.h"
 
 #include "my.h"
+#include "synch_wait.h"
 
 #include "log.h"
 #include "ring_buffer.h"
@@ -273,13 +274,13 @@ void tcp_established_process(struct tcp_sock *tsk, struct tcp_cb *cb, char *pack
 			else{
 				log(DEBUG, "tcp_established_process: recv a data packet in order.");
 
-				pthread_mutex_lock(&tsk->wait_rw->lock);
+			//	pthread_mutex_lock(&tsk->wait_recv->lock);
 				write_ring_buffer(tsk->rcv_buf, cb->payload, cb->pl_len);
 				if (! ring_buffer_empty(tsk->rcv_buf)) {			//buffer 为空说明刚刚写入的数据被读线程读完了
 					wake_up(tsk->wait_recv);
 					log(DEBUG, "write_ring_buffer: wake up a wait_recv.");
 				}
-			 	pthread_mutex_unlock(&tsk->wait_rw->lock);
+			 //	pthread_mutex_unlock(&tsk->wait_recv->lock);
 		
 				tsk->rcv_nxt = cb->seq_end ;
 				
@@ -293,13 +294,13 @@ void tcp_established_process(struct tcp_sock *tsk, struct tcp_cb *cb, char *pack
 							flag = 1;
 							list_delete_entry(&ofo_cb->list);
 
-							pthread_mutex_lock(&tsk->wait_rw->lock);
+				//			pthread_mutex_lock(&tsk->wait_recv->lock);
 							write_ring_buffer(tsk->rcv_buf, ofo_cb->payload, ofo_cb->pl_len);
 							if (! ring_buffer_empty(tsk->rcv_buf)) {			//buffer 为空说明刚刚写入的数据被读线程读完了
 								wake_up(tsk->wait_recv);
 								log(DEBUG, "write_ring_buffer: wake up a wait_recv.");
 							}
-			 				pthread_mutex_unlock(&tsk->wait_rw->lock);
+			 	//			pthread_mutex_unlock(&tsk->wait_recv->lock);
 						}		
 					}
 				}

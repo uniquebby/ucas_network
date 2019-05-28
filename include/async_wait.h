@@ -38,8 +38,8 @@ unlock:
 
 static inline int sleep_on(struct async_wait *wait)
 {
-	log(DEBUG, "sleep_on@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
 	pthread_mutex_lock(&wait->lock);
+	log(DEBUG, "sleep_on@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
 	if (wait->dead)
 		goto unlock;
 	wait->sleep = 1;
@@ -55,8 +55,8 @@ unlock:
 
 static inline int wake_up(struct async_wait *wait)
 {
-	log(DEBUG, "wake_up$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$");
 	pthread_mutex_lock(&wait->lock);
+	log(DEBUG, "wake_up$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$");
 	if (wait->dead)
 		goto unlock;
 

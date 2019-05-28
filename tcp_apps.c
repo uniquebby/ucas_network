@@ -69,7 +69,7 @@ void *tcp_client(void *arg)
 		exit(1);
 	}
 	char buf[BUF_SIZE];
-	FILE *file = fopen("client-input.dat", "rb");
+	FILE *file = fopen("my-input.dat", "rb");
 	while (!feof(file)) {
         int ret_size = fread(buf, 1, BUF_SIZE, file);
         tcp_sock_write(tsk, buf, ret_size);
