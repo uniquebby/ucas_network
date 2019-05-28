@@ -56,7 +56,8 @@ void tcp_send_packet(struct tcp_sock *tsk, char *packet, int len)
     ip->checksum = ip_checksum(ip);
 
   	char *link_packet = (char *)malloc(len);
-		if (!link_packet) {
+		if (!link_packet) 
+		{
 			log(ERROR, "malloc link_packet failed."); 	
 			return;
 		}
@@ -80,7 +81,8 @@ void tcp_send_packet(struct tcp_sock *tsk, char *packet, int len)
     //tsk->snd_wnd -= tcp_data_len;             源代码中有的，觉得有问题所以注释掉
     
     //开启定时器
-    if (!tsk->retrans_timer.enable) {
+    if (!tsk->retrans_timer.enable) 
+	{
         tcp_set_retrans_timer(tsk);
 		log(DEBUG, "tcp_send_packet: tcp_set_retrans_timer successed.");
 	}
@@ -99,10 +101,13 @@ void tcp_send_control_packet(struct tcp_sock *tsk, u8 flags)
 {
     int pkt_size = ETHER_HDR_SIZE + IP_BASE_HDR_SIZE + TCP_BASE_HDR_SIZE;
     char *packet = (char *)malloc(pkt_size);
-    if (!packet) {
+
+    if (!packet) 
+	{
         log(ERROR, "malloc tcp control packet failed.");
         return ;
     }
+
     log(DEBUG, "malloc tcp control packet successed.");
     struct iphdr *ip = packet_to_ip_hdr(packet);
     struct tcphdr *tcp = (struct tcphdr *)((char *)ip + IP_BASE_HDR_SIZE);
@@ -118,23 +123,24 @@ void tcp_send_control_packet(struct tcp_sock *tsk, u8 flags)
     log(DEBUG, "tcp_send_control_packet: tcp_checsum done.");
 
 
-    if (flags & (TCP_SYN|TCP_FIN)) {
+    if (flags & (TCP_SYN|TCP_FIN)) 
+	{
   		char *link_packet = (char*)malloc(pkt_size);
-		if (!link_packet) {
+		if (!link_packet) 
+		{
 			log(ERROR, "malloc link_packet failed."); 	
 			return;
 		}
 		memcpy(link_packet, packet, pkt_size);
 		
 		log(DEBUG, "tcp_set_control_packet: send a packet with ip %u and seq %u and flags %hu", ntohl(ip->daddr), tsk->snd_nxt, flags);
+
 	    //把发送的包加入到send_buf中
  	    struct packet_link_node *pkt_node = (struct packet_link_node *)malloc(sizeof(struct packet_link_node));
 		if (!pkt_node)
         	log(ERROR, "tcp_send_control_packet: malloc pkt_node failed.");
-
-
-    pkt_node->packet = link_packet;
-        	log(DEBUG, "tcp_send_control_packet: malloc pkt_node successed.");
+    	pkt_node->packet = link_packet;
+       	log(DEBUG, "tcp_send_control_packet: malloc pkt_node successed.");
    	    pkt_node->len = pkt_size;
     	pkt_node->seq = tsk->snd_nxt;
        	log(DEBUG, "tcp_send_control_packet: malloc pkt_node successed 1.");
@@ -146,13 +152,16 @@ void tcp_send_control_packet(struct tcp_sock *tsk, u8 flags)
 
     	//开启定时器
        	log(DEBUG, "tcp_send_control_packet: malloc pkt_node successed 3.");
-    if (!(tsk->retrans_timer.enable))
-        tcp_set_retrans_timer(tsk);
-		log(DEBUG, "tcp_send_control_packet: tcp_set_retrans_timer successed.");
+    	if (!(tsk->retrans_timer.enable)) 
+		{
+       		tcp_set_retrans_timer(tsk);
+			log(DEBUG, "tcp_send_control_packet: tcp_set_retrans_timer successed.");
+		}
+
 	}
 
     ip_send_packet(packet, pkt_size);
-		log(DEBUG, "tcp_send_control_packet: send a control packet successed.");
+	log(DEBUG, "tcp_send_control_packet: send a control packet successed.");
 }
 
 // send tcp reset packet
@@ -163,7 +172,8 @@ void tcp_send_reset(struct tcp_cb *cb)
 {
 	int pkt_size = ETHER_HDR_SIZE + IP_BASE_HDR_SIZE + TCP_BASE_HDR_SIZE;
 	char *packet = malloc(pkt_size);
-	if (!packet) {
+	if (!packet) 
+	{
 		log(ERROR, "malloc tcp control packet failed.");
 		return ;
 	}

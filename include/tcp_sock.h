@@ -72,7 +72,6 @@ struct tcp_sock {
 	struct synch_wait *wait_accept;
 	struct synch_wait *wait_recv;
 	struct synch_wait *wait_send;
-	struct synch_wait *wait_rw;				//read and write ring_buffer_recv
 
 	// receiving buffer
 	struct ring_buffer *rcv_buf;

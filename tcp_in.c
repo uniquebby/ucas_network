@@ -64,25 +64,29 @@ static inline int is_tcp_seq_valid(struct tcp_sock *tsk, struct tcp_cb *cb)
 void tcp_process(struct tcp_sock *tsk, struct tcp_cb *cb, char *packet)
 {
 //	fprintf(stdout, "TODO: implement %s please.\ndf, __FUNCTION__);
-	if (!tsk) {
+	if (!tsk) 
+	{
 		log(ERROR, "tcp_process: can't find a tsk that fit to packet'");
 		return;
 	} 
 	log(DEBUG, "tcp_process: successed to find a tsk that fit to packet'");
-	log(DEBUG, "tcp_process: recv a packet with seq %u and my rcv_nxt is %u", cb->seq, tsk->rcv_nxt);
+	log(DEBUG, "tcp_process: recv a packet with seq %u with flags=%d and my rcv_nxt is %u", cb->seq,cb->flags, tsk->rcv_nxt);
 
-	if (!is_tcp_seq_valid(tsk, cb)) { 
+	if (!is_tcp_seq_valid(tsk, cb)) 
+	{ 
 		log(ERROR, "tcp_process: recv a packet with invalid seq.");
 		return;
 	}
-	if (!(cb->flags & TCP_SYN) && !(cb->flags & TCP_ACK)) {
+	if (!(cb->flags & (TCP_SYN|TCP_FIN)) && !(cb->flags & TCP_ACK)) 
+	{
 		log(ERROR, "tcp_process: recv a invalid packet that have no ack.");
-		return;//除了SYN之外的所有包都必须有TCP_ACK
+		return;//除了SYN和FIN之外的所有包都必须有TCP_ACK
 	}
 
 	tcp_update_window_safe(tsk, cb);	
 
-	switch (tsk->state) {
+	switch (tsk->state) 
+	{
 		//被动建立和关闭连接
 		case TCP_CLOSED:
 			log(DEBUG, "tcp_process: process a CLOSED state packet.");
@@ -103,7 +107,9 @@ void tcp_process(struct tcp_sock *tsk, struct tcp_cb *cb, char *packet)
 			break;
 		case TCP_LAST_ACK:
 			log(DEBUG, "tcp_process: process a LAST_ACK state packet.");
-			if (cb->flags == TCP_ACK) {
+			if (cb->flags == TCP_ACK) 
+			{
+				tcp_unset_retrans_timer(tsk);
 				wake_up(tsk->wait_recv);				//唤醒server进程
 				tcp_set_state(tsk, TCP_CLOSED);
 				tcp_unhash(tsk);
@@ -118,45 +124,53 @@ void tcp_process(struct tcp_sock *tsk, struct tcp_cb *cb, char *packet)
 			break;
 		
 		case TCP_FIN_WAIT_1:
-			log(DEBUG, "tcp_process: process a FIN_WAIT_1 state packet.");
-			if (cb->flags == TCP_ACK) {
+			log(DEBUG, "tcp_process: process a FIN_WAIT_1 state packet.cb->ack= %u, tsk->snd_nxt = %u",cb->ack, tsk->snd_nxt);
+			if (cb->flags == TCP_ACK && cb->ack == tsk->snd_nxt) 
+			{
+				update_snd_buf(tsk, cb);
 				tcp_set_state(tsk, TCP_FIN_WAIT_2);
 
 				tsk->rcv_nxt = cb->seq_end ;
-
+				tcp_set_retrans_timer(tsk);
 				return;
 			}
 			break;
 		case TCP_FIN_WAIT_2:
 			log(DEBUG, "tcp_process: process a FIN_WAIT_2 state packet.");
-			if (cb->flags == (TCP_FIN | TCP_ACK)) {
+			if (cb->flags == TCP_FIN ) 
+			{			//所有的数据都确认才能关连接
+				log(DEBUG, "tcp_process: process a FIN_WAIT_2 state packet.");
+				if (list_empty(&tsk->send_buf)) 
+				{
+				log(DEBUG, "tcp_process: process a FIN_WAIT_2 state packet.");
+				tcp_unset_retrans_timer(tsk);
 				tcp_set_state(tsk, TCP_TIME_WAIT);
 
 				tsk->rcv_nxt = cb->seq_end ;
 				tcp_send_control_packet(tsk, TCP_ACK);
 
 				tcp_set_timewait_timer(tsk);
-
+				}
 				return;
 			}
 			break;
 	}
 
 	//拥塞控制
-	if (tsk->state != TCP_CLOSED && 
-		tsk->state != TCP_LISTEN && 
-		tsk->state != TCP_SYN_RECV) {
+	if (tsk->state != TCP_CLOSED && tsk->state != TCP_LISTEN && 
+										tsk->state != TCP_SYN_RECV) 
 		tcp_cc_in(tsk, cb);
-	}
 
 
-	if (cb->flags & TCP_RST) {
+	if (cb->flags & TCP_RST) 
+	{
 		tcp_set_state(tsk, TCP_CLOSED);
 		tcp_unhash(tsk);
 		return;
 	}
 
-	if (cb->flags & TCP_SYN) {
+	if (cb->flags & TCP_SYN) 
+	{
 		tcp_send_reset(cb);
 		tcp_set_state(tsk, TCP_CLOSED);
 		tcp_unhash(tsk);
@@ -170,7 +184,8 @@ void tcp_process(struct tcp_sock *tsk, struct tcp_cb *cb, char *packet)
 void tcp_cc_in(struct tcp_sock *tsk, struct tcp_cb *cb) {
 	if (cb->ack > tsk->snd_una) { 	//收到新数据的确认
 		log(DEBUG, "tcp_cc_in:  recv a new ack.");
-		switch(tsk->cstate) {
+		switch(tsk->cstate) 
+		{
 			case TCP_COPEN:
 				//slow start
 				if (tsk->cwnd < tsk->ssthresh) 
@@ -195,17 +210,21 @@ void tcp_cc_in(struct tcp_sock *tsk, struct tcp_cb *cb) {
 		}
 
 		tcp_set_retrans_timer(tsk);
+ // tsk->retrans_timer.enable = 1;  
 	}
 
-	else if (cb->ack == tsk->snd_una && cb->flags != (TCP_PSH|TCP_ACK)){ 	//没有新数据确认
-		if (cb->flags == TCP_ACK) {
+	else if (cb->ack == tsk->snd_una && cb->flags != (TCP_PSH|TCP_ACK))
+	{ 	//没有新数据确认
+		if (cb->flags == TCP_ACK) 
+		{
 			log(DEBUG, "tcp_cc_in:  recv a ack ack ack ack ack ack ack only.");
 			return;
 		}
 			
 		log(DEBUG, "tcp_cc_in:  recv a old ack.");
 
-		switch(tsk->cstate) {
+		switch(tsk->cstate) 
+		{
 			case TCP_COPEN:
 				tsk->cstate = TCP_CDISORDER;
 				break;
@@ -215,12 +234,13 @@ void tcp_cc_in(struct tcp_sock *tsk, struct tcp_cb *cb) {
 				tsk->cstate = TCP_CRECOVERY;
 				break;
 			case TCP_CRECOVERY:
-			default:
+				default:
 				break;
 		} 
 		tsk->inflight -= MSS;			//update inflight
 
 		tcp_set_retrans_timer(tsk);
+//    tsk->retrans_timer.enable = 1;  
 	}
 	else if (cb->ack < tsk->snd_una)
 		log(DEBUG, "tcp_cc_in: recv dupack of previous pkt that already be acked.");
@@ -228,8 +248,10 @@ void tcp_cc_in(struct tcp_sock *tsk, struct tcp_cb *cb) {
 		log(DEBUG, "tcp_cc_in: recv a psh|ack pkt.");
 }
 
-void tcp_listen_process(struct tcp_sock *tsk, struct tcp_cb *cb, char *packet) {
-	if (cb->flags == TCP_SYN) {
+void tcp_listen_process(struct tcp_sock *tsk, struct tcp_cb *cb, char *packet) 
+{
+	if (cb->flags == TCP_SYN) 
+	{
    		struct tcp_sock *csk = alloc_tcp_sock();
 
 		csk->sk_sip = cb->daddr;
@@ -308,7 +330,8 @@ void tcp_established_process(struct tcp_sock *tsk, struct tcp_cb *cb, char *pack
 		}
 		
 	}
-	if (cb->flags == (TCP_FIN | TCP_ACK)) {
+	if (cb->flags == TCP_FIN) {
+		tsk->rcv_nxt = cb->seq_end ;
 		tcp_set_state(tsk, TCP_CLOSE_WAIT);
 		tcp_send_control_packet(tsk, TCP_ACK);
 		tcp_sock_close(tsk);

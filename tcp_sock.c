@@ -63,6 +63,8 @@ struct tcp_sock *alloc_tcp_sock()
 
 	init_list_head(&tsk->send_buf);		//modified
 	init_list_head(&tsk->rcv_ofo_buf);		//modified
+	init_timer(&tsk->timewait, 0);
+	init_timer(&tsk->retrans_timer, 1);
 
 
 	tsk->inflight = 0;		//modified
@@ -74,7 +76,6 @@ struct tcp_sock *alloc_tcp_sock()
 	tsk->wait_accept = alloc_wait_struct();
 	tsk->wait_recv = alloc_wait_struct();
 	tsk->wait_send = alloc_wait_struct();
-	tsk->wait_rw = alloc_wait_struct();
 
 	return tsk;
 }
@@ -88,7 +89,8 @@ struct tcp_sock *alloc_tcp_sock()
 void free_tcp_sock(struct tcp_sock *tsk)
 {
 	tsk->ref_cnt -= 1;
-	if (tsk->ref_cnt <= 0) {
+	if (tsk->ref_cnt <= 0) 
+	{
 		log(DEBUG, "free tcp sock: ["IP_FMT":%hu<->"IP_FMT":%hu].", \
 				HOST_IP_FMT_STR(tsk->sk_sip), tsk->sk_sport,
 				HOST_IP_FMT_STR(tsk->sk_dip), tsk->sk_dport);
@@ -110,10 +112,11 @@ struct tcp_sock *tcp_sock_lookup_established(u32 saddr, u32 daddr, u16 sport, u1
 //  fprintf(stdout, "TODO: implement %s please.\n", __FUNCTION__);
     struct tcp_sock *sock = NULL;
     int hash = tcp_hash_function(saddr, daddr, sport, dport);
-    list_for_each_entry(sock, &tcp_established_sock_table[hash], hash_list) {
+    list_for_each_entry(sock, &tcp_established_sock_table[hash], hash_list) 
+	{
          if (sock->local.ip == saddr && sock->local.port == sport \
                     && sock->peer.ip == daddr && sock->peer.port == dport)
-            return sock;
+         return sock;
     }
  
     return NULL;
@@ -129,19 +132,19 @@ struct tcp_sock *tcp_sock_lookup_listen(u32 saddr, u16 sport)
     struct tcp_sock *sock = NULL;
     int hash = tcp_hash_function(0, 0, sport, 0);
     list_for_each_entry(sock, &tcp_listen_sock_table[hash], hash_list) {			//大坑啊,怎么写的是established table
-				 log(DEBUG, "tcp_sock_lookup_listen: saddr %u", saddr);
-				 log(DEBUG, "tcp_sock_lookup_listen: sock->local.ip %u", sock->sk_sip);
-				 log(DEBUG, "tcp_sock_lookup_listen: sport %hu", sport);
-				 log(DEBUG, "tcp_sock_lookup_listen: sock->local.port %hu", sock->sk_sport);
+		log(DEBUG, "tcp_sock_lookup_listen: saddr %u", saddr);
+		log(DEBUG, "tcp_sock_lookup_listen: sock->local.ip %u", sock->sk_sip);
+		log(DEBUG, "tcp_sock_lookup_listen: sport %hu", sport);
+		log(DEBUG, "tcp_sock_lookup_listen: sock->local.port %hu", sock->sk_sport);
 				 
 //				 log(DEBUG, "tcp_sock_lookup_listen: ip==saddr? %d", sock->sk_sip == saddr);
 //				 log(DEBUG, "tcp_sock_lookup_listen: port==sport? %d", sock->sk_sport == sport);
-		     if ((sock->local.ip == saddr) && (sock->local.port == sport)) { 
-				 		log(DEBUG, "tcp_sock_lookup_listen: is equal man!!!!!!!!!!!!!!!");
+	    if ((sock->local.ip == saddr) && (sock->local.port == sport)) 
+		{ 
+			log(DEBUG, "tcp_sock_lookup_listen: is equal man!!!!!!!!!!!!!!!");
             return sock;
-				 }
+		 }
     }
-
     return NULL;
 }
 
@@ -448,7 +451,7 @@ void tcp_sock_close(struct tcp_sock *tsk)
             struct tcp_sock *pos;
             list_for_each_entry (pos, &tsk->listen_queue, list) {
                 list_delete_entry(&pos->list);
-            tcp_unhash(pos);
+            		tcp_unhash(pos);
             }
             break;
 		}
@@ -456,16 +459,17 @@ void tcp_sock_close(struct tcp_sock *tsk)
             tcp_unhash(tsk);
             break;
         case TCP_ESTABLISHED:
-            tcp_send_control_packet(tsk, TCP_FIN|TCP_ACK);
+            tcp_send_control_packet(tsk, TCP_FIN);
             tcp_set_state(tsk, TCP_FIN_WAIT_1);
 						return;
             break;
         case TCP_CLOSE_WAIT:
-            tcp_send_control_packet(tsk, TCP_FIN|TCP_ACK);
+            tcp_send_control_packet(tsk, TCP_FIN);
             tcp_set_state(tsk, TCP_LAST_ACK);
 						return;
             break;
 				default:
+						return;
 						break;
     }
 

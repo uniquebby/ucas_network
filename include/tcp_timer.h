@@ -32,4 +32,6 @@ void tcp_set_retrans_timer(struct tcp_sock *tsk);
 
 void tcp_unset_retrans_timer(struct tcp_sock *tsk);
 
+void init_timer(struct tcp_timer *timer, int type);
+
 #endif
