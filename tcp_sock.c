@@ -132,16 +132,16 @@ struct tcp_sock *tcp_sock_lookup_listen(u32 saddr, u16 sport)
     struct tcp_sock *sock = NULL;
     int hash = tcp_hash_function(0, 0, sport, 0);
     list_for_each_entry(sock, &tcp_listen_sock_table[hash], hash_list) {			//大坑啊,怎么写的是established table
-		log(DEBUG, "tcp_sock_lookup_listen: saddr %u", saddr);
-		log(DEBUG, "tcp_sock_lookup_listen: sock->local.ip %u", sock->sk_sip);
-		log(DEBUG, "tcp_sock_lookup_listen: sport %hu", sport);
-		log(DEBUG, "tcp_sock_lookup_listen: sock->local.port %hu", sock->sk_sport);
+//		log(DEBUG, "tcp_sock_lookup_listen: saddr %u", saddr);
+//		log(DEBUG, "tcp_sock_lookup_listen: sock->local.ip %u", sock->sk_sip);
+//		log(DEBUG, "tcp_sock_lookup_listen: sport %hu", sport);
+//		log(DEBUG, "tcp_sock_lookup_listen: sock->local.port %hu", sock->sk_sport);
 				 
 //				 log(DEBUG, "tcp_sock_lookup_listen: ip==saddr? %d", sock->sk_sip == saddr);
 //				 log(DEBUG, "tcp_sock_lookup_listen: port==sport? %d", sock->sk_sport == sport);
 	    if ((sock->local.ip == saddr) && (sock->local.port == sport)) 
 		{ 
-			log(DEBUG, "tcp_sock_lookup_listen: is equal man!!!!!!!!!!!!!!!");
+//			log(DEBUG, "tcp_sock_lookup_listen: is equal man!!!!!!!!!!!!!!!");
             return sock;
 		 }
     }
@@ -411,18 +411,24 @@ int tcp_sock_write(struct tcp_sock *tsk, char *buf, int size)
     int hdr_size = ETHER_HDR_SIZE + IP_BASE_HDR_SIZE + TCP_BASE_HDR_SIZE;               
     int max_seg_size = ETH_FRAME_LEN - hdr_size;
     
-    while (rdy_snd_len < size) {
+    while (rdy_snd_len < size) 
+	{
         tsk->allowed_send = max(tsk->snd_wnd - tsk->inflight, 0);
-				log(DEBUG, "tcp_sock_write:snd_wnd is %d ,inflight is %d allowed_send is %d !!!!!!!!!!!!!!!!!!!", tsk->snd_wnd, tsk->inflight, tsk->allowed_send);
-        if (tsk->allowed_send <= 0) {
-             if (sleep_on(tsk->wait_send) < 0) {
-						 		log(DEBUG, "tcp_sock_write: fail to sleep on wait_send");
+		log(DEBUG, "tcp_sock_write:snd_wnd is %d ,inflight is %d allowed_send is %d !!!!!!!!!!!!!!!!!!!", tsk->snd_wnd, tsk->inflight, tsk->allowed_send);
+        while (tsk->allowed_send <= 0) 
+		{
+             if (sleep_on(tsk->wait_send) < 0) 
+			 {
+		 		log(DEBUG, "tcp_sock_write: fail to sleep on wait_send");
                 return -1;
-							}
-						 	log(DEBUG, "tcp_sock_write: successed to sleep on wait_send");
-						 	log(DEBUG, "tcp_sock_write: now allowed to send, the allowed_send = %d",tsk->allowed_send);
+			}
+		 	log(DEBUG, "tcp_sock_write: successed to sleep on wait_send");
+
+        	tsk->allowed_send = max(tsk->snd_wnd - tsk->inflight, 0);
+		 	log(DEBUG, "tcp_sock_write: now allowed to send, the allowed_send = %d",tsk->allowed_send);
         }
 
+		log(DEBUG, "tcp_sock_write:snd_wnd is %d ,inflight is %d allowed_send is %d !!!!!!!!!!!!!!!!!!!", tsk->snd_wnd, tsk->inflight, tsk->allowed_send);
         int seg_size = min(min(size - rdy_snd_len, tsk->allowed_send), max_seg_size); //实际发送的数据大小
         int pkt_size = hdr_size + seg_size;              //实际一次发送的包大小
         char *packet = malloc(pkt_size);

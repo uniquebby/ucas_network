@@ -182,6 +182,7 @@ flags	include/rtable.h	/^	int flags;				\/\/ flags (could be omitted here)$/;"	m
 flags	include/tcp.h	/^	u8 flags;		\/\/ flags in tcp header$/;"	m	struct:tcp_cb
 flags	include/tcp.h	/^	u8 flags;$/;"	m	struct:tcphdr
 frag_off	include/ip.h	/^    u16 frag_off;						\/\/ the offset of ip fragment$/;"	m	struct:iphdr
+free_packet_link_node	include/my.h	/^static inline void free_packet_link_node(struct packet_link_node *pkt_node) $/;"	f
 free_ring_buffer	include/ring_buffer.h	/^static inline void free_ring_buffer(struct ring_buffer *rbuf)$/;"	f
 free_tcp_sock	tcp_sock.c	/^void free_tcp_sock(struct tcp_sock *tsk)$/;"	f
 free_wait_struct	include/async_wait.h	/^static inline void free_wait_struct(struct async_wait *wait)$/;"	f
@@ -212,6 +213,7 @@ inflight	include/tcp_sock.h	/^    int inflight;$/;"	m	struct:tcp_sock
 init_all_ifaces	main.c	/^void init_all_ifaces()$/;"	f
 init_list_head	include/list.h	/^static inline void init_list_head(struct list_head *list)$/;"	f
 init_tcp_stack	tcp_sock.c	/^void init_tcp_stack()$/;"	f
+init_timer	tcp_timer.c	/^void init_timer(struct tcp_timer *timer, int type) $/;"	f
 init_ustack	main.c	/^void init_ustack()$/;"	f
 instance	main.c	/^ustack_t *instance;$/;"	v
 ip	include/base.h	/^	u32 ip;						\/\/ ip address of this interface$/;"	m	struct:__anon3
@@ -261,8 +263,8 @@ mac	include/base.h	/^	u8	mac[ETH_ALEN];			\/\/ mac address of this interface$/;"
 main	main.c	/^int main(int argc, char **argv)$/;"	f
 mask	include/base.h	/^	u32 mask;					\/\/ ip mask of this interface$/;"	m	struct:__anon3
 mask	include/rtable.h	/^	u32 mask;				\/\/ network mask of dest$/;"	m	struct:__anon1
-max	tcp_in.c	45;"	d	file:
-max	tcp_sock.c	17;"	d	file:
+max	tcp_in.c	46;"	d	file:
+max	tcp_sock.c	18;"	d	file:
 min	include/ring_buffer.h	56;"	d
 name	include/base.h	/^	char name[16];				\/\/ name of this interface$/;"	m	struct:__anon3
 net	tcp_topo.py	/^    net = Mininet(topo = topo, link = TCLink, controller = None) $/;"	v	class:TCPTopo
@@ -275,7 +277,7 @@ off	include/tcp.h	/^	u8 off:4;			\/\/ data offset$/;"	m	struct:tcphdr
 open_device	main.c	/^int open_device(const char *dname)$/;"	f
 packet	include/arpcache.h	/^	char *packet;			\/\/ packet$/;"	m	struct:cached_pkt
 packet	include/my.h	/^   char *packet;$/;"	m	struct:packet_link_node
-packet_link_node	include/my.h	/^struct packet_link_node{$/;"	s
+packet_link_node	include/my.h	/^struct packet_link_node $/;"	s
 packet_to_ether_arp	include/arp.h	/^static inline struct ether_arp *packet_to_ether_arp(const char *packet)$/;"	f
 packet_to_ip_hdr	include/ip.h	/^static inline struct iphdr *packet_to_ip_hdr(const char *packet)$/;"	f
 packet_to_tcp_hdr	include/tcp.h	/^static inline struct tcphdr *packet_to_tcp_hdr(char *packet)$/;"	f
@@ -295,7 +297,7 @@ read_ring_buffer	include/ring_buffer.h	/^static inline int read_ring_buffer(stru
 recovery_point	include/tcp_sock.h	/^	u32 recovery_point;		$/;"	m	struct:tcp_sock
 ref_cnt	include/tcp_sock.h	/^	int ref_cnt;$/;"	m	struct:tcp_sock
 req_list	include/arpcache.h	/^	struct list_head req_list;			\/\/ the pending packet list$/;"	m	struct:__anon4	typeref:struct:__anon4::list_head
-resend	include/my.h	/^static inline void resend(struct tcp_sock *tsk) {$/;"	f
+resend	include/my.h	/^static inline void resend(struct tcp_sock *tsk) $/;"	f
 retrans_timer	include/tcp_sock.h	/^	struct tcp_timer retrans_timer;$/;"	m	struct:tcp_sock	typeref:struct:tcp_sock::tcp_timer
 retranstimer_to_tcp_sock	include/tcp_timer.h	19;"	d
 retries	include/arpcache.h	/^	int retries;			\/\/ number of retries$/;"	m	struct:arp_req
@@ -339,7 +341,7 @@ synch_wait	include/synch_wait.h	/^struct synch_wait {$/;"	s
 tail	include/ring_buffer.h	/^	int tail;		\/\/ write from tail$/;"	m	struct:ring_buffer
 tcp	include/tcp.h	/^	struct tcphdr *tcp;		\/\/ pointer to tcp header$/;"	m	struct:tcp_cb	typeref:struct:tcp_cb::tcphdr
 tcp_bind_hash	tcp_sock.c	/^static int tcp_bind_hash(struct tcp_sock *tsk)$/;"	f	file:
-tcp_bind_sock_table	tcp_sock.c	22;"	d	file:
+tcp_bind_sock_table	tcp_sock.c	23;"	d	file:
 tcp_bind_unhash	tcp_sock.c	/^void tcp_bind_unhash(struct tcp_sock *tsk)$/;"	f
 tcp_cb	include/tcp.h	/^struct tcp_cb {$/;"	s
 tcp_cb_init	tcp.c	/^void tcp_cb_init(struct iphdr *ip, struct tcphdr *tcp, struct tcp_cb *cb)$/;"	f
@@ -350,14 +352,14 @@ tcp_copy_flags_to_str	tcp.c	/^void tcp_copy_flags_to_str(u8 flags, char buf[32])
 tcp_cstate	include/tcp.h	/^enum tcp_cstate {$/;"	g
 tcp_data_len	include/my.h	/^   u32 tcp_data_len;$/;"	m	struct:packet_link_node
 tcp_established_process	tcp_in.c	/^void tcp_established_process(struct tcp_sock *tsk, struct tcp_cb *cb, char *packet) {$/;"	f
-tcp_established_sock_table	tcp_sock.c	20;"	d	file:
+tcp_established_sock_table	tcp_sock.c	21;"	d	file:
 tcp_get_port	tcp_sock.c	/^static u16 tcp_get_port()$/;"	f	file:
 tcp_hash	tcp_sock.c	/^int tcp_hash(struct tcp_sock *tsk)$/;"	f
 tcp_hash_function	include/tcp_hash.h	/^static inline int tcp_hash_function(u32 saddr, u32 daddr, u16 sport, u16 dport)$/;"	f
 tcp_hash_table	include/tcp_hash.h	/^struct tcp_hash_table {$/;"	s
 tcp_init_hdr	tcp_out.c	/^static void tcp_init_hdr(struct tcphdr *tcp, u16 sport, u16 dport, u32 seq, u32 ack,$/;"	f	file:
-tcp_listen_process	tcp_in.c	/^void tcp_listen_process(struct tcp_sock *tsk, struct tcp_cb *cb, char *packet) {$/;"	f
-tcp_listen_sock_table	tcp_sock.c	21;"	d	file:
+tcp_listen_process	tcp_in.c	/^void tcp_listen_process(struct tcp_sock *tsk, struct tcp_cb *cb, char *packet) $/;"	f
+tcp_listen_sock_table	tcp_sock.c	22;"	d	file:
 tcp_new_iss	tcp.c	/^u32 tcp_new_iss()$/;"	f
 tcp_port_in_use	tcp_sock.c	/^static int tcp_port_in_use(u16 sport)$/;"	f	file:
 tcp_process	tcp_in.c	/^void tcp_process(struct tcp_sock *tsk, struct tcp_cb *cb, char *packet)$/;"	f
@@ -390,7 +392,7 @@ tcp_state	include/tcp.h	/^enum tcp_state { TCP_CLOSED, TCP_LISTEN, TCP_SYN_RECV,
 tcp_state_str	tcp.c	/^const char *tcp_state_str[] = { "CLOSED", "LISTEN", "SYN_RECV",$/;"	v
 tcp_state_to_str	include/tcp.h	/^static inline const char *tcp_state_to_str(int state)$/;"	f
 tcp_syn_recv_process	tcp_in.c	/^void tcp_syn_recv_process(struct tcp_sock *tsk, struct tcp_cb *cb, char *packet) {$/;"	f
-tcp_syn_sent_process	tcp_in.c	/^void tcp_syn_sent_process(struct tcp_sock *tsk, struct tcp_cb *cb, char *packet) {$/;"	f
+tcp_syn_sent_process	tcp_in.c	/^void tcp_syn_sent_process(struct tcp_sock *tsk, struct tcp_cb *cb, char *packet) $/;"	f
 tcp_timer	include/tcp_timer.h	/^struct tcp_timer {$/;"	s
 tcp_timer_thread	tcp_timer.c	/^void *tcp_timer_thread(void *arg)$/;"	f
 tcp_unhash	tcp_sock.c	/^void tcp_unhash(struct tcp_sock *tsk)$/;"	f
@@ -402,6 +404,7 @@ this_log_level	include/log.h	/^static enum log_level this_log_level = DEBUG;$/;"
 thread	include/arpcache.h	/^	pthread_t thread;					\/\/ the id of the arp cache sweeping thread$/;"	m	struct:__anon4
 timeout	include/tcp_timer.h	/^	int timeout;	\/\/ in micro second$/;"	m	struct:tcp_timer
 timer_list	tcp_timer.c	/^static struct list_head timer_list;$/;"	v	typeref:struct:list_head	file:
+timer_lock	tcp_timer.c	/^pthread_mutex_t timer_lock;		\/\/ mutex lock of timer$/;"	v
 timewait	include/tcp_sock.h	/^	struct tcp_timer timewait;$/;"	m	struct:tcp_sock	typeref:struct:tcp_sock::tcp_timer
 timewait_to_tcp_sock	include/tcp_timer.h	16;"	d
 topo	tcp_topo.py	/^    topo = TCPTopo()$/;"	v	class:TCPTopo
@@ -415,7 +418,7 @@ u16	include/types.h	/^typedef uint16_t u16;$/;"	t
 u32	include/types.h	/^typedef uint32_t u32;$/;"	t
 u64	include/types.h	/^typedef uint64_t u64;$/;"	t
 u8	include/types.h	/^typedef uint8_t u8;$/;"	t
-update_snd_buf	include/my.h	/^static inline void update_snd_buf(struct tcp_sock *tsk, struct tcp_cb *cb) {$/;"	f
+update_snd_buf	include/my.h	/^static inline void update_snd_buf(struct tcp_sock *tsk, struct tcp_cb *cb) $/;"	f
 urp	include/tcp.h	/^	u16 urp;			\/\/ urgent pointer$/;"	m	struct:tcphdr
 usage_and_exit	main.c	/^static void usage_and_exit(const char *basename)$/;"	f	file:
 ustack_run	main.c	/^void ustack_run()$/;"	f
@@ -429,7 +432,6 @@ wait_exit	include/synch_wait.h	/^static inline void wait_exit(struct synch_wait 
 wait_init	include/async_wait.h	/^static inline void wait_init(struct async_wait *wait)$/;"	f
 wait_init	include/synch_wait.h	/^static inline void wait_init(struct synch_wait *wait)$/;"	f
 wait_recv	include/tcp_sock.h	/^	struct synch_wait *wait_recv;$/;"	m	struct:tcp_sock	typeref:struct:tcp_sock::synch_wait
-wait_rw	include/tcp_sock.h	/^	struct synch_wait *wait_rw;				\/\/read and write ring_buffer_recv$/;"	m	struct:tcp_sock	typeref:struct:tcp_sock::synch_wait
 wait_send	include/tcp_sock.h	/^	struct synch_wait *wait_send;$/;"	m	struct:tcp_sock	typeref:struct:tcp_sock::synch_wait
 wake_up	include/async_wait.h	/^static inline int wake_up(struct async_wait *wait)$/;"	f
 wake_up	include/synch_wait.h	/^static inline int wake_up(struct synch_wait *wait)$/;"	f

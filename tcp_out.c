@@ -55,24 +55,17 @@ void tcp_send_packet(struct tcp_sock *tsk, char *packet, int len)
     
     ip->checksum = ip_checksum(ip);
 
-  	char *link_packet = (char *)malloc(len);
-		if (!link_packet) 
-		{
-			log(ERROR, "malloc link_packet failed."); 	
-			return;
-		}
-		memcpy(link_packet, packet, len);
 	  
     //把发送的包加入到send_buf中
-    struct packet_link_node *pkt_node = (struct packet_link_node*)malloc(sizeof(struct packet_link_node));
-    pkt_node->packet = link_packet;
+    struct packet_link_node *pkt_node = alloc_packet_link_node(len); 
+	memcpy(pkt_node->packet, packet, len);
     pkt_node->len = len;
     pkt_node->tcp_data_len = tcp_data_len;
     pkt_node->seq = tsk->snd_nxt;
     list_add_tail(&pkt_node->list, &tsk->send_buf);
 
    	struct iphdr *link_node_ip = packet_to_ip_hdr(pkt_node->packet);
-	log(DEBUG, "tcp_sent_packet: buffer a packet with ip %u and seq %u", ntohl(link_node_ip->daddr), tsk->snd_nxt);
+	log(DEBUG, "tcp_sent_packet: buffer a packet with ip %u and seq1 %u ", ntohl(link_node_ip->daddr), tsk->snd_nxt);
 
 
     tsk->snd_nxt += tcp_data_len;
@@ -87,7 +80,8 @@ void tcp_send_packet(struct tcp_sock *tsk, char *packet, int len)
 		log(DEBUG, "tcp_send_packet: tcp_set_retrans_timer successed.");
 	}
     
-    ip_send_packet(link_packet, len);
+	log(DEBUG, "tcp_send_packet: is ip——send——packet 's problem？.");
+    ip_send_packet(packet, len);
 		log(DEBUG, "tcp_send_packet: send a data pkt successed.");
 }
 
@@ -123,6 +117,7 @@ void tcp_send_control_packet(struct tcp_sock *tsk, u8 flags)
     log(DEBUG, "tcp_send_control_packet: tcp_checsum done.");
 
 
+	log(DEBUG, "tcp_set_control_packet: send a packet with ip %u and seq= %u,ack=%u and flags %hu", ntohl(ip->daddr), tsk->snd_nxt,tsk->rcv_nxt,flags);
     if (flags & (TCP_SYN|TCP_FIN)) 
 	{
   		char *link_packet = (char*)malloc(pkt_size);
@@ -133,7 +128,6 @@ void tcp_send_control_packet(struct tcp_sock *tsk, u8 flags)
 		}
 		memcpy(link_packet, packet, pkt_size);
 		
-		log(DEBUG, "tcp_set_control_packet: send a packet with ip %u and seq %u and flags %hu", ntohl(ip->daddr), tsk->snd_nxt, flags);
 
 	    //把发送的包加入到send_buf中
  	    struct packet_link_node *pkt_node = (struct packet_link_node *)malloc(sizeof(struct packet_link_node));
@@ -143,15 +137,15 @@ void tcp_send_control_packet(struct tcp_sock *tsk, u8 flags)
        	log(DEBUG, "tcp_send_control_packet: malloc pkt_node successed.");
    	    pkt_node->len = pkt_size;
     	pkt_node->seq = tsk->snd_nxt;
-       	log(DEBUG, "tcp_send_control_packet: malloc pkt_node successed 1.");
+//       	log(DEBUG, "tcp_send_control_packet: malloc pkt_node successed 1.");
     	list_add_tail(&pkt_node->list, &tsk->send_buf);
-       	log(DEBUG, "tcp_send_control_packet: malloc pkt_node successed 2.");
+ //      	log(DEBUG, "tcp_send_control_packet: malloc pkt_node successed 2.");
 //		struct iphdr *link_node_ip = packet_to_ip_hdr(pkt_node->packet);
 
         tsk->snd_nxt += 1;
 
     	//开启定时器
-       	log(DEBUG, "tcp_send_control_packet: malloc pkt_node successed 3.");
+  //     	log(DEBUG, "tcp_send_control_packet: malloc pkt_node successed 3.");
     	if (!(tsk->retrans_timer.enable)) 
 		{
        		tcp_set_retrans_timer(tsk);

@@ -44,7 +44,7 @@ void tcp_scan_timer_list()
 				}
 										
 
-                if (t->enable > 3) 
+                if (t->enable > 6) 
 				{
 					log(DEBUG, "tcp_scan_timer_list: timeout at a timewait timer parent == null? %d tsk->ref_cnt = %d.", !tsk->parent, tsk->ref_cnt);
                     list_delete_entry(&t->list);
@@ -56,15 +56,15 @@ void tcp_scan_timer_list()
 //                  struct packet_link_node *pkt_node = list_entry(&tsk->send_buf.next, typ    eof(pkt_node), list);
 //                  ip_send_packet(pkt_node->packet, pkt_node->len);    
                 }
-				log(DEBUG, "tcp_scan_timer_list: timeout at a retranstimer.11111111111111");
+//				log(DEBUG, "tcp_scan_timer_list: timeout at a retranstimer.11111111111111");
 				tsk->inflight = 0;
-				log(DEBUG, "tcp_scan_timer_list: timeout at a retranstimer.22222222222222");
+//				log(DEBUG, "tcp_scan_timer_list: timeout at a retranstimer.22222222222222");
            	    tsk->ssthresh = tsk->cwnd / 2;
-				log(DEBUG, "tcp_scan_timer_list: timeout at a retranstimer.33333333333333");
+//				log(DEBUG, "tcp_scan_timer_list: timeout at a retranstimer.33333333333333");
                	tsk->cwnd = MSS;
-				log(DEBUG, "tcp_scan_timer_list: timeout at a retranstimer.44444444444444");
+//				log(DEBUG, "tcp_scan_timer_list: timeout at a retranstimer.44444444444444");
                 tsk->cstate = TCP_COPEN;
-				log(DEBUG, "tcp_scan_timer_list: timeout at a retranstimer.55555555555555");
+//				log(DEBUG, "tcp_scan_timer_list: timeout at a retranstimer.55555555555555");
 
                 resend(tsk);
 				//记录重传次数
@@ -98,12 +98,13 @@ void tcp_set_retrans_timer(struct tcp_sock *tsk)
 //  fprintf(stdout, "TODO: implement %s please.\n", __FUNCTION__);
 	log(DEBUG, "tcp_timer.c,,,tcp_set_retrans_timer .");
     tsk->retrans_timer.type = 1;
-	log(DEBUG, "tcp_timer.c,,,tcp_set_retrans_timer .1");
+//	log(DEBUG, "tcp_timer.c,,,tcp_set_retrans_timer .1");
     tsk->retrans_timer.timeout = TCP_RETRANS_INTERVAL_INITIAL;
-	log(DEBUG, "tcp_timer.c,,,tcp_set_retrans_timer .2");
+//	log(DEBUG, "tcp_timer.c,,,tcp_set_retrans_timer .2");
 		if (tsk->retrans_timer.enable == 0) {
-				log(DEBUG, "tcp_timer.c,,,tcp_set_retrans_timer .222222222222222222222222222222222222222222222222");
+			log(DEBUG, "tcp_timer.c,,,tcp_set_retrans_timer .timer->list = %p and timer_list = %p start", tsk->retrans_timer.list.next, timer_list.next);
     		list_add_tail(&tsk->retrans_timer.list, &timer_list);
+			log(DEBUG, "tcp_timer.c,,,tcp_set_retrans_timer .222222222222222222222222222222222222222222222222 done");
 		}
 	log(DEBUG, "tcp_timer.c,,,tcp_set_retrans_timer .3");
     tsk->retrans_timer.enable = 1;  //重传次数
@@ -132,6 +133,8 @@ void *tcp_timer_thread(void *arg)
 	while (1) 
 	{
 		usleep(TCP_TIMER_SCAN_INTERVAL);
+//		FILE *file = fopen("cwnd.dat", "ab");
+//		fwrite(&tsk->cwnd, 4, 1, file);
 		tcp_scan_timer_list();
 	}
 
