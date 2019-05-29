@@ -64,13 +64,12 @@ void tcp_send_packet(struct tcp_sock *tsk, char *packet, int len)
     pkt_node->seq = tsk->snd_nxt;
     list_add_tail(&pkt_node->list, &tsk->send_buf);
 
-   	struct iphdr *link_node_ip = packet_to_ip_hdr(pkt_node->packet);
-	log(DEBUG, "tcp_sent_packet: buffer a packet with ip %u and seq1 %u ", ntohl(link_node_ip->daddr), tsk->snd_nxt);
+//   	struct iphdr *link_node_ip = packet_to_ip_hdr(pkt_node->packet);
+//	log(DEBUG, "tcp_sent_packet: buffer a packet with ip %u and seq1 %u ", ntohl(link_node_ip->daddr), tsk->snd_nxt);
 
 
     tsk->snd_nxt += tcp_data_len;
-		log(DEBUG, "tcp_sent_packet: send a data pkt with len %d tsk->snd_nxt %u!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!",tcp_data_len, tsk->snd_nxt);
-		tsk->inflight += tcp_data_len;
+	log(DEBUG, "tcp_sent_packet: send a data pkt with len %d tsk->snd_nxt %u!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!",tcp_data_len, tsk->snd_nxt);
     //tsk->snd_wnd -= tcp_data_len;             源代码中有的，觉得有问题所以注释掉
     
     //开启定时器
@@ -80,9 +79,10 @@ void tcp_send_packet(struct tcp_sock *tsk, char *packet, int len)
 		log(DEBUG, "tcp_send_packet: tcp_set_retrans_timer successed.");
 	}
     
-	log(DEBUG, "tcp_send_packet: is ip——send——packet 's problem？.");
+//	log(DEBUG, "tcp_send_packet: is ip——send——packet 's problem？.");
     ip_send_packet(packet, len);
-		log(DEBUG, "tcp_send_packet: send a data pkt successed.");
+	tsk->inflight += tcp_data_len;
+	log(DEBUG, "tcp_send_packet: send a data pkt successed.");
 }
 
 

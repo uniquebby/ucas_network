@@ -20,18 +20,17 @@ void tcp_cc_in(struct tcp_sock *tsk, struct tcp_cb *cb);
 
 static inline void tcp_update_window(struct tcp_sock *tsk, struct tcp_cb *cb)
 {
-  //  u16 old_snd_wnd = tsk->snd_wnd;
 	//  tsk->snd_wnd = cb->rwnd;        //modified
 
 	int old_allowed_send = tsk->allowed_send;
 	int new_allowed_send;
     tsk->adv_wnd = cb->rwnd;
-    tsk->snd_wnd = min(tsk->adv_wnd, tsk->cwnd);
+    tsk->snd_wnd = min(tsk->adv_wnd, (int)tsk->cwnd * MSS);
 	new_allowed_send = tsk->snd_wnd - tsk->inflight;
 
     if (old_allowed_send <= 0 && new_allowed_send > 0 )
     	wake_up(tsk->wait_send);
-	log(DEBUG, "tcp_update_window: successed to update_window with adv_wnd %u cwnd %u and snd_wnd %u.", \
+	log(DEBUG, "tcp_update_window: successed to update_window with adv_wnd %u cwnd= %f packets and snd_wnd %u.", \
 	tsk->adv_wnd, tsk->cwnd, tsk->snd_wnd);
 }
 
@@ -191,12 +190,14 @@ void tcp_cc_in(struct tcp_sock *tsk, struct tcp_cb *cb) {
 		switch(tsk->cstate) 
 		{
 			case TCP_COPEN:
+				log(DEBUG, "tcp_cc_in:  recv a new ack.468512357465132156123.0456132156123.15643120.545612315468541321315646541321y");
 			case TCP_CDISORDER:
+				log(DEBUG, "tcp_cc_in:  recv a new ack.468512357465132156123.0456132156123.15643120.545612315468541321315646541321y");
 				//slow start
-				if (tsk->cwnd < tsk->ssthresh) 
-					tsk->cwnd += MSS;
+				if ((int)tsk->cwnd < tsk->ssthresh) 
+					++tsk->cwnd;
 				else
-					tsk->cwnd += (MSS * MSS / tsk->cwnd);
+					tsk->cwnd += (1/tsk->cwnd);
 				
 				tsk->snd_una = cb->ack;
 				tsk->inflight = tsk->snd_nxt - tsk->snd_una;			//update inflight
@@ -215,12 +216,10 @@ void tcp_cc_in(struct tcp_sock *tsk, struct tcp_cb *cb) {
 					tsk->cstate = TCP_COPEN;
 				break;
 		}
- // tsk->retrans_timer.enable = 1;  
 	}
 
 	else if (cb->ack == tsk->snd_una && cb->flags != (TCP_PSH|TCP_ACK))
 	{ 	//没有新数据确认
-//		tcp_set_retrans_timer(tsk);
 		log(DEBUG, "tcp_cc_in:  ##############################$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$@@@@@@@@@@@@@@@@@@@@@@@@");
 		if (cb->flags == TCP_ACK) 
 		{
@@ -236,7 +235,7 @@ void tcp_cc_in(struct tcp_sock *tsk, struct tcp_cb *cb) {
 				tsk->cstate = TCP_CDISORDER;
 				break;
 			case TCP_CDISORDER:
-				tsk->ssthresh = tsk->cwnd / 2;
+				tsk->ssthresh = (int)tsk->cwnd / 2;
 				tsk->cwnd = tsk->ssthresh;
 				tsk->cstate = TCP_CRECOVERY;
 				break;
@@ -313,32 +312,32 @@ void tcp_established_process(struct tcp_sock *tsk, struct tcp_cb *cb, char *pack
 				write_ring_buffer(tsk->rcv_buf, cb->payload, cb->pl_len);
 				if (! ring_buffer_empty(tsk->rcv_buf)) {			//buffer 为空说明刚刚写入的数据被读线程读完了
 					wake_up(tsk->wait_recv);
-					log(DEBUG, "write_ring_buffer: wake up a wait_recv.1");
+					//log(DEBUG, "write_ring_buffer: wake up a wait_recv.1");
 				}
 			 //	pthread_mutex_unlock(&tsk->wait_recv->lock);
 		
 				tsk->rcv_nxt = cb->seq_end ;
-				log(DEBUG, "write_ring_buffer: wake up a wait_recv.2");
+//				log(DEBUG, "write_ring_buffer: wake up a wait_recv.2");
 				
 				//把ofo buffer中能连续上的包送到rcv buf
 				struct tcp_cb *ofo_cb, *q;
-				log(DEBUG, "write_ring_buffer: wake up a wait_recv.3");
+//				log(DEBUG, "write_ring_buffer: wake up a wait_recv.3");
 				int flag = 1; 	//有没有形成连续的包
 				while (!list_empty(&tsk->rcv_ofo_buf) && flag) {
 					flag = 0;
-					log(DEBUG, "write_ring_buffer: wake up a wait_recv.4");
+//					log(DEBUG, "write_ring_buffer: wake up a wait_recv.4");
 					list_for_each_entry_safe(ofo_cb, q, &tsk->rcv_ofo_buf, list) {
-						log(DEBUG, "write_ring_buffer: wake up a wait_recv.5");
+//						log(DEBUG, "write_ring_buffer: wake up a wait_recv.5");
 						if (ofo_cb->seq_end == tsk->rcv_nxt - 1) {
-						log(DEBUG, "write_ring_buffer: wake up a wait_recv.6");
+//						log(DEBUG, "write_ring_buffer: wake up a wait_recv.6");
 							flag = 1;
-						log(DEBUG, "write_ring_buffer: wake up a wait_recv.7");
+//						log(DEBUG, "write_ring_buffer: wake up a wait_recv.7");
 							list_delete_entry(&ofo_cb->list);
-						log(DEBUG, "write_ring_buffer: wake up a wait_recv.8");
+//						log(DEBUG, "write_ring_buffer: wake up a wait_recv.8");
 
 				//			pthread_mutex_lock(&tsk->wait_recv->lock);
 							write_ring_buffer(tsk->rcv_buf, ofo_cb->payload, ofo_cb->pl_len);
-						log(DEBUG, "write_ring_buffer: wake up a wait_recv.");
+//						log(DEBUG, "write_ring_buffer: wake up a wait_recv.");
 							if (! ring_buffer_empty(tsk->rcv_buf)) {			//buffer 为空说明刚刚写入的数据被读线程读完了
 								wake_up(tsk->wait_recv);
 								log(DEBUG, "write_ring_buffer: wake up a wait_recv.");

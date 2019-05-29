@@ -59,9 +59,9 @@ void tcp_scan_timer_list()
 //				log(DEBUG, "tcp_scan_timer_list: timeout at a retranstimer.11111111111111");
 				tsk->inflight = 0;
 //				log(DEBUG, "tcp_scan_timer_list: timeout at a retranstimer.22222222222222");
-           	    tsk->ssthresh = tsk->cwnd / 2;
+           	    tsk->ssthresh = (int)tsk->cwnd / 2;
 //				log(DEBUG, "tcp_scan_timer_list: timeout at a retranstimer.33333333333333");
-               	tsk->cwnd = MSS;
+               	tsk->cwnd = 1;
 //				log(DEBUG, "tcp_scan_timer_list: timeout at a retranstimer.44444444444444");
                 tsk->cstate = TCP_COPEN;
 //				log(DEBUG, "tcp_scan_timer_list: timeout at a retranstimer.55555555555555");
@@ -150,7 +150,10 @@ void *tcp_cwnd_plot_thread(void *arg)
 //		usleep(TCP_RETRANS_INTERVAL_INITIAL);
 		usleep(10000);
 		++i;
-		fprintf(file, "%d : %u\n",i,tsk->cwnd);
+		fprintf(file, "%f\n",tsk->cwnd);
+//		fprintf(file, "%d:(%d,%u) ",i,(int)tsk->cwnd, tsk->ssthresh);
+//		if (i % 10 == 0)
+//		fprintf(file, "\n");
 	}
 	fclose(file);
 

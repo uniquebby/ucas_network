@@ -69,8 +69,9 @@ struct tcp_sock *alloc_tcp_sock()
 
 	tsk->inflight = 0;		//modified
 	tsk->rcv_buf = alloc_ring_buffer(tsk->rcv_wnd);
-	tsk->cwnd = MSS;
+	tsk->cwnd = 1;
 	tsk->snd_wnd = MSS;
+	tsk->ssthresh = 16;
 
 	tsk->wait_connect = alloc_wait_struct();
 	tsk->wait_accept = alloc_wait_struct();

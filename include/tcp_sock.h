@@ -114,7 +114,7 @@ struct tcp_sock {
 	u16 rcv_wnd;
 
 	// congestion window
-	u32 cwnd;
+	float cwnd;
 
 	// slow start threshold
 	u32 ssthresh;
