@@ -148,7 +148,7 @@ void *tcp_cwnd_plot_thread(void *arg)
 	while (1) 
 	{
 //		usleep(TCP_RETRANS_INTERVAL_INITIAL);
-		usleep(10000);
+		usleep(1000);
 		++i;
 		fprintf(file, "%f\n",tsk->cwnd);
 //		fprintf(file, "%d:(%d,%u) ",i,(int)tsk->cwnd, tsk->ssthresh);
