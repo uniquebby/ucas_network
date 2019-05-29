@@ -133,13 +133,30 @@ void *tcp_timer_thread(void *arg)
 	while (1) 
 	{
 		usleep(TCP_TIMER_SCAN_INTERVAL);
-//		FILE *file = fopen("cwnd.dat", "ab");
-//		fwrite(&tsk->cwnd, 4, 1, file);
 		tcp_scan_timer_list();
 	}
 
 	return NULL;
 }
+
+//parse the cwnd  
+void *tcp_cwnd_plot_thread(void *arg)
+{
+	struct tcp_sock *tsk = (struct tcp_sock *)arg;
+	FILE *file = fopen("cwnd.dat", "w");
+	int i = 0;
+	while (1) 
+	{
+//		usleep(TCP_RETRANS_INTERVAL_INITIAL);
+		usleep(10000);
+		++i;
+		fprintf(file, "%d : %u\n",i,tsk->cwnd);
+	}
+	fclose(file);
+
+	return NULL;
+}
+
 
 void init_timer(struct tcp_timer *timer, int type) 
 {

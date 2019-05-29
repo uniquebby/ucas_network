@@ -1,4 +1,5 @@
 #include "tcp_sock.h"
+#include "tcp_timer.h"
 
 #include "log.h"
 
@@ -68,6 +69,10 @@ void *tcp_client(void *arg)
 				NET_IP_FMT_STR(skaddr->ip), ntohs(skaddr->port));
 		exit(1);
 	}
+
+	pthread_t cwnd_plot;		//获取拥塞窗口数据,代码在tcp_timer中
+	pthread_create(&cwnd_plot, NULL, tcp_cwnd_plot_thread, tsk);
+
 	char buf[BUF_SIZE];
 	FILE *file = fopen("my-input.dat", "rb");
 	while (!feof(file)) {

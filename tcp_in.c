@@ -196,7 +196,7 @@ void tcp_cc_in(struct tcp_sock *tsk, struct tcp_cb *cb) {
 				if (tsk->cwnd < tsk->ssthresh) 
 					tsk->cwnd += MSS;
 				else
-					tsk->cwnd += (MSS / tsk->cwnd);
+					tsk->cwnd += (MSS * MSS / tsk->cwnd);
 				
 				tsk->snd_una = cb->ack;
 				tsk->inflight = tsk->snd_nxt - tsk->snd_una;			//update inflight

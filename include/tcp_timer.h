@@ -25,6 +25,8 @@ struct tcp_sock;
 
 // the thread that scans timer_list periodically
 void *tcp_timer_thread(void *arg);
+//the thread that parse cwnd
+void *tcp_cwnd_plot_thread(void *arg);
 // add the timer of tcp sock to timer_list
 void tcp_set_timewait_timer(struct tcp_sock *);
 
