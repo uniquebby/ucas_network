@@ -151,7 +151,7 @@ void *tcp_cwnd_plot_thread(void *arg)
 
 	float i = 0;
 //	float time = 1;	//取cwnd的间隔，单位为ms
-	while (1) 
+	while (tsk->state != TCP_TIME_WAIT) 
 	{
 		usleep(1000);
 		++i;

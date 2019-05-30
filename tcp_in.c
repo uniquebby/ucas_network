@@ -254,6 +254,9 @@ void tcp_cc_in(struct tcp_sock *tsk, struct tcp_cb *cb) {
 				tsk->rp = tsk->snd_nxt;
 				resend(tsk);
 				tsk->cstate = TCP_CPR;
+			case TCP_CPR:
+				tsk->cwnd += (1/tsk->cwnd);
+				break;
 			default:
 				break;
 		} 
@@ -262,7 +265,10 @@ void tcp_cc_in(struct tcp_sock *tsk, struct tcp_cb *cb) {
 
 	}
 	else if (cb->ack < tsk->snd_una)
+	{
+		tsk->inflight = max(tsk->inflight-1, 0);
 		log(DEBUG, "tcp_cc_in: recv dupack of previous pkt that already be acked.");
+	}
 	else
 		log(DEBUG, "tcp_cc_in: recv a psh|ack pkt.");
 
