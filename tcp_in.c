@@ -24,14 +24,16 @@ static inline void tcp_update_window(struct tcp_sock *tsk, struct tcp_cb *cb)
 
 	int old_allowed_send = tsk->allowed_send;
 	int new_allowed_send;
+
     tsk->adv_wnd = cb->rwnd;
-    tsk->snd_wnd = min(tsk->adv_wnd, (int)tsk->cwnd * MSS);
-	new_allowed_send = tsk->snd_wnd - tsk->inflight;
+	int cwnd_in_bytes = (int)(tsk->cwnd * MSS);
+    tsk->snd_wnd = min(tsk->adv_wnd, cwnd_in_bytes);
+	new_allowed_send = tsk->snd_wnd - tsk->inflight * MSS;
 
     if (old_allowed_send <= 0 && new_allowed_send > 0 )
     	wake_up(tsk->wait_send);
-	log(DEBUG, "tcp_update_window: successed to update_window with adv_wnd %u cwnd= %f packets and snd_wnd %u.", \
-	tsk->adv_wnd, tsk->cwnd, tsk->snd_wnd);
+	log(DEBUG, "tcp_update_window: successed to update_window with adv_wnd %u cwnd= %f packets and snd_wnd %u. old_snd %d new_snd %d inflight=%d", \
+			tsk->adv_wnd, tsk->cwnd, tsk->snd_wnd, old_allowed_send, new_allowed_send, tsk->inflight);
 }
 
 // update the snd_wnd safely: cb->ack should be between snd_una and snd_nxt
@@ -50,9 +52,9 @@ static inline void tcp_update_window_safe(struct tcp_sock *tsk, struct tcp_cb *c
 static inline int is_tcp_seq_valid(struct tcp_sock *tsk, struct tcp_cb *cb)
 {
 	u32 rcv_end = tsk->rcv_nxt + max(tsk->rcv_wnd, 1);
-	//if (less_than_32b(cb->seq, rcv_end) && less_or_equal_32b(tsk->rcv_nxt, cb->seq_end)) {
-	if (less_than_32b(cb->seq, tsk->rcv_nxt) || less_or_equal_32b(rcv_end, cb->seq_end)) {
-		log(ERROR, "received packet with invalid seq, drop it.");
+//	if (less_than_32b(cb->seq, rcv_end) && less_or_equal_32b(tsk->rcv_nxt, cb->seq_end)) {
+	if (less_than_32b(cb->seq, tsk->rcv_nxt) || less_than_32b(rcv_end, cb->seq_end)) {
+		log(ERROR, "received packet with invalid seq, drop it.seq=%u rcv_nxt=%u rcv_end=%u seq_end=%u",cb->seq, tsk->rcv_nxt,rcv_end,cb->seq_end);
 		return 0;
 	}
 	else {
@@ -69,13 +71,15 @@ void tcp_process(struct tcp_sock *tsk, struct tcp_cb *cb, char *packet)
 		log(ERROR, "tcp_process: can't find a tsk that fit to packet'");
 		return;
 	} 
-	log(DEBUG, "tcp_process: successed to find a tsk that fit to packet'");
-	log(DEBUG, "tcp_process: recv a packet with seq %u with flags=%d,ack=%u and my rcv_nxt is %u", cb->seq,cb->flags,cb->ack,tsk->rcv_nxt);
+	log(DEBUG, "tcp_process: recv a packet with seq %u with flags=%d,ack=%u and my rcv_nxt is %u snd_nxt=%u", cb->seq,cb->flags,cb->ack,tsk->rcv_nxt, tsk->snd_nxt);
 
 	if (!is_tcp_seq_valid(tsk, cb)) 
 	{ 
 		log(ERROR, "tcp_process: recv a packet with invalid seq.");
-		tcp_send_control_packet(tsk, TCP_ACK);		//如果收到重复的包，可能是ack丢了，重新发送
+		//如果收到重复的包，可能是ack丢了，重新发送.             
+		//buf 记录，如果是收到比超过接收窗口的包就不能发重复确认
+		if (less_than_32b(cb->seq, tsk->rcv_nxt))
+			tcp_send_control_packet(tsk, TCP_ACK);			
 		return;
 	}
 	if (!(cb->flags & (TCP_SYN|TCP_FIN)) && !(cb->flags & TCP_ACK)) 
@@ -85,7 +89,7 @@ void tcp_process(struct tcp_sock *tsk, struct tcp_cb *cb, char *packet)
 	}
 
 	tcp_set_retrans_timer(tsk);
-	tcp_update_window_safe(tsk, cb);	
+//	tcp_update_window_safe(tsk, cb);	
 
 	switch (tsk->state) 
 	{
@@ -190,30 +194,30 @@ void tcp_cc_in(struct tcp_sock *tsk, struct tcp_cb *cb) {
 		switch(tsk->cstate) 
 		{
 			case TCP_COPEN:
-				log(DEBUG, "tcp_cc_in:  recv a new ack.468512357465132156123.0456132156123.15643120.545612315468541321315646541321y");
 			case TCP_CDISORDER:
-				log(DEBUG, "tcp_cc_in:  recv a new ack.468512357465132156123.0456132156123.15643120.545612315468541321315646541321y");
+			case TCP_CRECOVERY:
 				//slow start
 				if ((int)tsk->cwnd < tsk->ssthresh) 
 					++tsk->cwnd;
 				else
 					tsk->cwnd += (1/tsk->cwnd);
+				log(DEBUG, "tcp_cc_in:  recv a new ack.now the cwnd is %f $0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000", tsk->cwnd);
 				
 				tsk->snd_una = cb->ack;
-				tsk->inflight = tsk->snd_nxt - tsk->snd_una;			//update inflight
-				if (tsk->cstate == TCP_CDISORDER)
+//				tsk->inflight = tsk->snd_nxt - tsk->snd_una;			//update inflight
+				tsk->inflight = max(tsk->inflight-1, 0);
+				log(DEBUG, "tcp_cc_in:  recv a new ack.now the inflight is %d $000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000", tsk->inflight);
+				if (tsk->cstate != TCP_COPEN)
 					tsk->cstate = TCP_COPEN;
-				
-				
 				update_snd_buf(tsk, cb);
 				break;
-
-			case TCP_CRECOVERY:
+			case TCP_CPR:
 				update_snd_buf(tsk, cb);
 				if (cb->ack < tsk->rp)	
 					resend(tsk);	
 				else
 					tsk->cstate = TCP_COPEN;
+				tsk->cwnd += (1/tsk->cwnd);
 				break;
 		}
 	}
@@ -232,18 +236,29 @@ void tcp_cc_in(struct tcp_sock *tsk, struct tcp_cb *cb) {
 		switch(tsk->cstate) 
 		{
 			case TCP_COPEN:
-				tsk->cstate = TCP_CDISORDER;
-				break;
 			case TCP_CDISORDER:
-				tsk->ssthresh = (int)tsk->cwnd / 2;
-				tsk->cwnd = tsk->ssthresh;
-				tsk->cstate = TCP_CRECOVERY;
+				if ((u32)tsk->cwnd < tsk->ssthresh) 
+					++tsk->cwnd;
+				else
+					tsk->cwnd += (1/tsk->cwnd);
+				log(DEBUG, "tcp_cc_in:  recv a old ack.now the cwnd is %f $0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000", tsk->cwnd);
+				
+				if (tsk->cstate == TCP_COPEN)
+					tsk->cstate = TCP_CDISORDER;
+				else
+					tsk->cstate = TCP_CRECOVERY;
 				break;
 			case TCP_CRECOVERY:
-				default:
+           	    tsk->ssthresh = max(((u32)(tsk->cwnd / 2)), 1);
+				tsk->cwnd = tsk->ssthresh;
+				tsk->rp = tsk->snd_nxt;
+				resend(tsk);
+				tsk->cstate = TCP_CPR;
+			default:
 				break;
 		} 
-		tsk->inflight -= MSS;			//update inflight
+		tsk->inflight = max(tsk->inflight-1, 0);
+		log(DEBUG, "tcp_cc_in:  recv an old ack.now the inflight is %d $000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000", tsk->inflight);
 
 	}
 	else if (cb->ack < tsk->snd_una)
@@ -295,6 +310,7 @@ void tcp_established_process(struct tcp_sock *tsk, struct tcp_cb *cb, char *pack
 
 		if (cb->pl_len) { 
 			tsk->rcv_wnd -= cb->pl_len;
+			tsk->rcv_wnd = max(tsk->rcv_wnd, 0);
 			if (cb->seq > tsk->rcv_nxt) { 
 				log(DEBUG, "tcp_established_process: recv a data packet out of order.*******************************************************************************************************************************************************************");
 				struct tcp_cb *ofo_cb, *q;

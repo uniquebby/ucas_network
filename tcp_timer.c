@@ -8,6 +8,10 @@
 #include <stdio.h>
 #include <unistd.h>
 
+#ifndef max
+#	define max(x,y) ((x)>(y) ? (x) : (y))
+#endif
+
 static struct list_head timer_list;
 
 // scan the timer_list, find the tcp sock which stays for at 2*MSL, release it
@@ -59,7 +63,7 @@ void tcp_scan_timer_list()
 //				log(DEBUG, "tcp_scan_timer_list: timeout at a retranstimer.11111111111111");
 				tsk->inflight = 0;
 //				log(DEBUG, "tcp_scan_timer_list: timeout at a retranstimer.22222222222222");
-           	    tsk->ssthresh = (int)tsk->cwnd / 2;
+           	    tsk->ssthresh = max(((u32)(tsk->cwnd / 2)), 1);
 //				log(DEBUG, "tcp_scan_timer_list: timeout at a retranstimer.33333333333333");
                	tsk->cwnd = 1;
 //				log(DEBUG, "tcp_scan_timer_list: timeout at a retranstimer.44444444444444");
@@ -101,7 +105,7 @@ void tcp_set_retrans_timer(struct tcp_sock *tsk)
 //	log(DEBUG, "tcp_timer.c,,,tcp_set_retrans_timer .1");
     tsk->retrans_timer.timeout = TCP_RETRANS_INTERVAL_INITIAL;
 //	log(DEBUG, "tcp_timer.c,,,tcp_set_retrans_timer .2");
-		if (tsk->retrans_timer.enable == 0) {
+		if (tsk->retrans_timer.enable == 0 && !list_empty(&tsk->send_buf)) {
 			log(DEBUG, "tcp_timer.c,,,tcp_set_retrans_timer .timer->list = %p and timer_list = %p start", tsk->retrans_timer.list.next, timer_list.next);
     		list_add_tail(&tsk->retrans_timer.list, &timer_list);
 			log(DEBUG, "tcp_timer.c,,,tcp_set_retrans_timer .222222222222222222222222222222222222222222222222 done");
@@ -119,8 +123,8 @@ void tcp_unset_retrans_timer(struct tcp_sock *tsk)
 	log(DEBUG, "tcp_timer.c,,,tcp_unset_retrans_timer .1");
 	log(DEBUG, "tcp_unset_retrans_timer: &tsk= %p", (&tsk->retrans_timer.list)->next);
 	if (tsk->retrans_timer.enable >= 0)
-    list_delete_entry(&tsk->retrans_timer.list);
-  tsk->retrans_timer.enable = 0;  //重传次数
+    	list_delete_entry(&tsk->retrans_timer.list);
+  	tsk->retrans_timer.enable = 0;  //0表示关闭，非零表示重传次数
 	log(DEBUG, "tcp_timer.c,,,tcp_unset_retrans_timer .2");
 }
 
@@ -150,10 +154,10 @@ void *tcp_cwnd_plot_thread(void *arg)
 //		usleep(TCP_RETRANS_INTERVAL_INITIAL);
 		usleep(1000);
 		++i;
-		fprintf(file, "%f\n",tsk->cwnd);
+		fprintf(file, "%f ",tsk->cwnd);
 //		fprintf(file, "%d:(%d,%u) ",i,(int)tsk->cwnd, tsk->ssthresh);
-//		if (i % 10 == 0)
-//		fprintf(file, "\n");
+		if (i % 30 == 0)
+		fprintf(file, "\n");
 	}
 	fclose(file);
 

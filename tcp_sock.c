@@ -69,9 +69,9 @@ struct tcp_sock *alloc_tcp_sock()
 
 	tsk->inflight = 0;		//modified
 	tsk->rcv_buf = alloc_ring_buffer(tsk->rcv_wnd);
-	tsk->cwnd = 1;
 	tsk->snd_wnd = MSS;
-	tsk->ssthresh = 16;
+	tsk->cwnd = 1;
+	tsk->ssthresh = 8;
 
 	tsk->wait_connect = alloc_wait_struct();
 	tsk->wait_accept = alloc_wait_struct();
@@ -414,22 +414,16 @@ int tcp_sock_write(struct tcp_sock *tsk, char *buf, int size)
     
     while (rdy_snd_len < size) 
 	{
-        tsk->allowed_send = max(tsk->snd_wnd - tsk->inflight, 0);
-		log(DEBUG, "tcp_sock_write:snd_wnd is %d ,inflight is %d allowed_send is %d !!!!!!!!!!!!!!!!!!!", tsk->snd_wnd, tsk->inflight, tsk->allowed_send);
+        tsk->allowed_send = max((tsk->snd_wnd - tsk->inflight * MSS), 0);
+		log(DEBUG, "tcp_sock_write:snd_wnd is %d ,inflight is %d cwnd is %f allowed_send is %d ????????????????????", tsk->snd_wnd, tsk->inflight,tsk->cwnd, tsk->allowed_send);
         while (tsk->allowed_send <= 0) 
 		{
-             if (sleep_on(tsk->wait_send) < 0) 
-			 {
-		 		log(DEBUG, "tcp_sock_write: fail to sleep on wait_send");
-                return -1;
-			}
-		 	log(DEBUG, "tcp_sock_write: successed to sleep on wait_send");
-
-        	tsk->allowed_send = max(tsk->snd_wnd - tsk->inflight, 0);
-		 	log(DEBUG, "tcp_sock_write: now allowed to send, the allowed_send = %d",tsk->allowed_send);
+            sleep_on(tsk->wait_send);  
+        	tsk->allowed_send = max((tsk->snd_wnd - tsk->inflight * MSS), 0);
         }
 
-		log(DEBUG, "tcp_sock_write:snd_wnd is %d ,inflight is %d allowed_send is %d !!!!!!!!!!!!!!!!!!!", tsk->snd_wnd, tsk->inflight, tsk->allowed_send);
+	 	log(DEBUG, "tcp_sock_write: now allowed to send, the allowed_send = %d",tsk->allowed_send);
+		log(DEBUG, "tcp_sock_write:snd_wnd is %d ,inflight is %d cwnd is %f allowed_send is %d !!!!!!!!!!!!!!!!!!!", tsk->snd_wnd, tsk->inflight,tsk->cwnd, tsk->allowed_send);
         int seg_size = min(min(size - rdy_snd_len, tsk->allowed_send), max_seg_size); //实际发送的数据大小
         int pkt_size = hdr_size + seg_size;              //实际一次发送的包大小
         char *packet = malloc(pkt_size);

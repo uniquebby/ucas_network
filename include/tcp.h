@@ -68,7 +68,7 @@ enum tcp_state { TCP_CLOSED, TCP_LISTEN, TCP_SYN_RECV, TCP_SYN_SENT, \
 	TCP_FIN_WAIT_2, TCP_CLOSING, TCP_TIME_WAIT };
 //tcp congestion states
 enum tcp_cstate {
-     TCP_COPEN, TCP_CLOSS, TCP_CDISORDER, TCP_CCWR, TCP_CRECOVERY
+     TCP_COPEN, TCP_CLOSS, TCP_CDISORDER, TCP_CCWR, TCP_CRECOVERY,TCP_CPR
 };
 
 static inline struct tcphdr *packet_to_tcp_hdr(char *packet)

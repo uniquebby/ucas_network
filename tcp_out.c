@@ -81,7 +81,8 @@ void tcp_send_packet(struct tcp_sock *tsk, char *packet, int len)
     
 //	log(DEBUG, "tcp_send_packet: is ip——send——packet 's problem？.");
     ip_send_packet(packet, len);
-	tsk->inflight += tcp_data_len;
+	++tsk->inflight;
+	log(DEBUG, "tcp_send_packet: inflight is %d ######################################################################.", tsk->inflight);
 	log(DEBUG, "tcp_send_packet: send a data pkt successed.");
 }
 
@@ -117,7 +118,7 @@ void tcp_send_control_packet(struct tcp_sock *tsk, u8 flags)
     log(DEBUG, "tcp_send_control_packet: tcp_checsum done.");
 
 
-	log(DEBUG, "tcp_set_control_packet: send a packet with ip %u and seq= %u,ack=%u and flags %hu", ntohl(ip->daddr), tsk->snd_nxt,tsk->rcv_nxt,flags);
+	log(DEBUG, "tcp_set_control_packet: send a packet with ip %u and seq= %u,ack=%u and flags %hu and rcv_wnd %hu,inflight%d", ntohl(ip->daddr), tsk->snd_nxt,tsk->rcv_nxt,flags, tsk->rcv_wnd, tsk->inflight);
     if (flags & (TCP_SYN|TCP_FIN)) 
 	{
   		char *link_packet = (char*)malloc(pkt_size);
