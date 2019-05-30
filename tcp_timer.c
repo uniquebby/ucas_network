@@ -153,9 +153,9 @@ void *tcp_cwnd_plot_thread(void *arg)
 //	float time = 1;	//取cwnd的间隔，单位为ms
 	while (tsk->state != TCP_TIME_WAIT) 
 	{
-		usleep(1000);
+		usleep(100);
 		++i;
-		fprintf(file, "%f:%f\n",i/1000, tsk->cwnd);
+		fprintf(file, "%f:%f\n",i/10000, tsk->cwnd);
 //		fprintf(file, "%d:(%d,%u) ",i,(int)tsk->cwnd, tsk->ssthresh);
 //		if (i % 30 == 0)
 //		fprintf(file, "\n");
