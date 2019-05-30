@@ -21,7 +21,7 @@ struct tcp_sock;
 #define TCP_TIMER_SCAN_INTERVAL 100000
 #define TCP_MSL			1000000
 #define TCP_TIMEWAIT_TIMEOUT	(2 * TCP_MSL)
-#define TCP_RETRANS_INTERVAL_INITIAL 200000
+#define TCP_RETRANS_INTERVAL_INITIAL 400000
 
 // the thread that scans timer_list periodically
 void *tcp_timer_thread(void *arg);
