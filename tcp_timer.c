@@ -160,6 +160,7 @@ void *tcp_cwnd_plot_thread(void *arg)
 //		if (i % 30 == 0)
 //		fprintf(file, "\n");
 	}
+	fprintf(file, "done.\n");
 	fclose(file);
 
 	return NULL;
