@@ -74,7 +74,7 @@ void *tcp_client(void *arg)
 	pthread_create(&cwnd_plot, NULL, tcp_cwnd_plot_thread, tsk);
 
 	char buf[BUF_SIZE];
-	FILE *file = fopen("my-input.dat", "rb");
+	FILE *file = fopen("client-input.dat", "rb");
 	while (!feof(file)) {
         int ret_size = fread(buf, 1, BUF_SIZE, file);
         tcp_sock_write(tsk, buf, ret_size);
