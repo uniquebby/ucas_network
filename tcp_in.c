@@ -25,7 +25,7 @@ static inline void tcp_update_window(struct tcp_sock *tsk, struct tcp_cb *cb)
 	int old_allowed_send = tsk->allowed_send;
 	int new_allowed_send;
 
-    tsk->adv_wnd = cb->rwnd;
+    tsk->adv_wnd = cb->ack + cb->rwnd - tsk->snd_nxt;
 	int cwnd_in_bytes = (int)(tsk->cwnd * MSS);
     tsk->snd_wnd = min(tsk->adv_wnd, cwnd_in_bytes);
 	new_allowed_send = tsk->snd_wnd - tsk->inflight * MSS;
@@ -309,8 +309,8 @@ void tcp_established_process(struct tcp_sock *tsk, struct tcp_cb *cb, char *pack
 	if (!(cb->flags & (TCP_RST|TCP_SYN))) {
 
 		if (cb->pl_len) { 
-			tsk->rcv_wnd -= cb->pl_len;
-			tsk->rcv_wnd = max(tsk->rcv_wnd, 0);
+//			tsk->rcv_wnd -= cb->pl_len;
+//			tsk->rcv_wnd = max(tsk->rcv_wnd, 0);
 			if (cb->seq > tsk->rcv_nxt) { 
 				log(DEBUG, "tcp_established_process: recv a data packet out of order.*******************************************************************************************************************************************************************");
 				struct tcp_cb *ofo_cb, *q;
@@ -326,6 +326,7 @@ void tcp_established_process(struct tcp_sock *tsk, struct tcp_cb *cb, char *pack
 
 			//	pthread_mutex_lock(&tsk->wait_recv->lock);
 				write_ring_buffer(tsk->rcv_buf, cb->payload, cb->pl_len);
+				tsk->rcv_wnd -= cb->pl_len;
 				if (! ring_buffer_empty(tsk->rcv_buf)) {			//buffer 为空说明刚刚写入的数据被读线程读完了
 					wake_up(tsk->wait_recv);
 					//log(DEBUG, "write_ring_buffer: wake up a wait_recv.1");
@@ -353,6 +354,7 @@ void tcp_established_process(struct tcp_sock *tsk, struct tcp_cb *cb, char *pack
 
 				//			pthread_mutex_lock(&tsk->wait_recv->lock);
 							write_ring_buffer(tsk->rcv_buf, ofo_cb->payload, ofo_cb->pl_len);
+							tsk->rcv_wnd -= ofo_cb->pl_len;
 //						log(DEBUG, "write_ring_buffer: wake up a wait_recv.");
 							if (! ring_buffer_empty(tsk->rcv_buf)) {			//buffer 为空说明刚刚写入的数据被读线程读完了
 								wake_up(tsk->wait_recv);

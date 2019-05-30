@@ -8,14 +8,15 @@ def readfile(filename):
 	with open(filename, 'r') as f:
 		for line in f.readlines():
 			linestr = line.strip('\n')
-			data_list.append(float(linestr))
+			data_tuple = linestr.strip(':')
+			data_list.append(data_tuple)
 			data_num += 1
 
 	return data_list, data_num
 
-rtt_time = 0.01
-y_list,num = readfile("./cwnd.dat")
-x_list = [rtt_time * i for i in range(num)]
+data_list,num = readfile("./cwnd.dat")
+x_list = [t[0] for t in data_list]
+y_list = [t[1] for t in data_list]
 
 plt.plot(x_list, y_list)
 plt.show()

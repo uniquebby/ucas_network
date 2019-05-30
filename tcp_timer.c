@@ -148,16 +148,17 @@ void *tcp_cwnd_plot_thread(void *arg)
 {
 	struct tcp_sock *tsk = (struct tcp_sock *)arg;
 	FILE *file = fopen("cwnd.dat", "w");
-	int i = 0;
+
+	float i = 0;
+//	float time = 1;	//取cwnd的间隔，单位为ms
 	while (1) 
 	{
-//		usleep(TCP_RETRANS_INTERVAL_INITIAL);
 		usleep(1000);
 		++i;
-		fprintf(file, "%f ",tsk->cwnd);
+		fprintf(file, "%f:%f\n",i/1000, tsk->cwnd);
 //		fprintf(file, "%d:(%d,%u) ",i,(int)tsk->cwnd, tsk->ssthresh);
-		if (i % 30 == 0)
-		fprintf(file, "\n");
+//		if (i % 30 == 0)
+//		fprintf(file, "\n");
 	}
 	fclose(file);
 
