@@ -48,7 +48,7 @@ void tcp_scan_timer_list()
 				}
 										
 
-                if (t->enable > 6) 
+                if (t->enable > 3) 
 				{
 					log(DEBUG, "tcp_scan_timer_list: timeout at a timewait timer parent == null? %d tsk->ref_cnt = %d.", !tsk->parent, tsk->ref_cnt);
                     list_delete_entry(&t->list);
