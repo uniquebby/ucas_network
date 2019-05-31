@@ -90,6 +90,8 @@ struct tcp_sock {
     int allowed_send;
     //recovery_point
     u32 rp;
+	//loss point
+	u32 lp;
 
 	// initial sending sequence number
 	u32 iss;
@@ -98,6 +100,9 @@ struct tcp_sock {
 	u32 snd_una;
 	// the highest byte sent
 	u32 snd_nxt;
+
+	u32 tot_pkt_snd;
+	u32 average;
 
 	// the highest byte ACKed by itself (i.e. the byte expected to receive next)
 	u32 rcv_nxt;

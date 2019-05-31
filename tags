@@ -142,6 +142,7 @@ arp_tha	include/arp.h	/^	u8	arp_tha[ETH_ALEN];	\/\/ target hardware address$/;"	
 arp_tpa	include/arp.h	/^	u32	arp_tpa;		\/\/ target protocol address$/;"	m	struct:ether_arp
 arpcache_t	include/arpcache.h	/^} arpcache_t;$/;"	t	typeref:struct:__anon4
 async_wait	include/async_wait.h	/^struct async_wait {$/;"	s
+average	include/tcp_sock.h	/^	u32 average;$/;"	m	struct:tcp_sock
 backlog	include/tcp_sock.h	/^	int backlog;$/;"	m	struct:tcp_sock
 bind_hash_list	include/tcp_sock.h	/^	struct list_head bind_hash_list;$/;"	m	struct:tcp_sock	typeref:struct:tcp_sock::list_head
 bind_table	include/tcp_hash.h	/^	struct list_head bind_table[TCP_HASH_SIZE];$/;"	m	struct:tcp_hash_table	typeref:struct:tcp_hash_table::list_head
@@ -415,6 +416,7 @@ topo	tcp_topo.py	/^    topo = TCPTopo()$/;"	v	class:TCPTopo
 topo	tcp_topo_loss.py	/^    topo = TCPTopo()$/;"	v	class:TCPTopo
 tos	include/ip.h	/^    u8 tos;								\/\/ type of service (usually set to 0)$/;"	m	struct:iphdr
 tot_len	include/ip.h	/^    u16 tot_len;						\/\/ total length of ip data$/;"	m	struct:iphdr
+tot_pkt_snd	include/tcp_sock.h	/^	u32 tot_pkt_snd;$/;"	m	struct:tcp_sock
 ttl	include/ip.h	/^    u8 ttl;								\/\/ ttl of ip packet$/;"	m	struct:iphdr
 type	include/icmp.h	/^	u8	type;				\/\/ type of icmp message$/;"	m	struct:icmphdr
 type	include/tcp_timer.h	/^	int type;	\/\/ time-wait: 0		retrans: 1$/;"	m	struct:tcp_timer
@@ -442,4 +444,6 @@ wake_up	include/synch_wait.h	/^static inline int wake_up(struct synch_wait *wait
 write_ring_buffer	include/ring_buffer.h	/^static inline void write_ring_buffer(struct ring_buffer *rbuf, char *buf, int size)$/;"	f
 x2	include/tcp.h	/^	u8 x2:4;			\/\/ (unused)$/;"	m	struct:tcphdr
 x_list	result.py	/^x_list = [t[0] for t in data_list]$/;"	v
+x_list	result.py	/^x_list = list(map(float, x_list))$/;"	v
 y_list	result.py	/^y_list = [t[1] for t in data_list]$/;"	v
+y_list	result.py	/^y_list = list(map(float, y_list))$/;"	v

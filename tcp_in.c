@@ -30,7 +30,13 @@ static inline void tcp_update_window(struct tcp_sock *tsk, struct tcp_cb *cb)
     tsk->snd_wnd = min(tsk->adv_wnd, cwnd_in_bytes);
 	new_allowed_send = tsk->snd_wnd - tsk->inflight * MSS;
 
-    if (old_allowed_send <= 0 && new_allowed_send > 0 )
+	if (tsk->cstate == TCP_CLOSS && new_allowed_send > 0)
+	{
+		resend(tsk);
+		new_allowed_send -= MSS;
+	}
+
+    if (old_allowed_send <= 0 && new_allowed_send > 0)
     	wake_up(tsk->wait_send);
 	log(DEBUG, "tcp_update_window: successed to update_window with adv_wnd %u cwnd= %f packets and snd_wnd %u. old_snd %d new_snd %d inflight=%d", \
 			tsk->adv_wnd, tsk->cwnd, tsk->snd_wnd, old_allowed_send, new_allowed_send, tsk->inflight);
@@ -201,6 +207,7 @@ void tcp_cc_in(struct tcp_sock *tsk, struct tcp_cb *cb) {
 			case TCP_COPEN:
 			case TCP_CDISORDER:
 			case TCP_CRECOVERY:
+			case TCP_CLOSS:
 				//slow start
 				if ((int)tsk->cwnd < tsk->ssthresh) 
 					++tsk->cwnd;
@@ -208,9 +215,8 @@ void tcp_cc_in(struct tcp_sock *tsk, struct tcp_cb *cb) {
 					tsk->cwnd += (1/tsk->cwnd);
 				log(DEBUG, "tcp_cc_in:  recv a new ack.now the cwnd is %f $0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000", tsk->cwnd);
 				
-//				tsk->inflight = (tsk->snd_nxt - tsk->snd_una) / MSS;			//update inflight
 				log(DEBUG, "tcp_cc_in:  recv a new ack.now the inflight is %d $000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000", tsk->inflight);
-				if (tsk->cstate != TCP_COPEN)
+				if (tsk->cstate != TCP_CLOSS || cb->ack >= tsk->lp)
 					tsk->cstate = TCP_COPEN;
 				update_snd_buf(tsk, cb);
 				break;
@@ -223,7 +229,8 @@ void tcp_cc_in(struct tcp_sock *tsk, struct tcp_cb *cb) {
 				tsk->cwnd += (1/tsk->cwnd);
 				break;
 		}
-		tsk->inflight = min(tsk->inflight-1, (tsk->snd_nxt - tsk->snd_una) / MSS);
+		tsk->inflight = min(tsk->inflight-1, (tsk->snd_nxt - tsk->snd_una) / tsk->average);
+//		tsk->inflight = max(tsk->inflight-1, 0);
 	}
 
 	else if (cb->ack == tsk->snd_una && cb->flags != (TCP_PSH|TCP_ACK))
@@ -241,6 +248,7 @@ void tcp_cc_in(struct tcp_sock *tsk, struct tcp_cb *cb) {
 		{
 			case TCP_COPEN:
 			case TCP_CDISORDER:
+			case TCP_CLOSS:
 				if ((u32)tsk->cwnd < tsk->ssthresh) 
 					++tsk->cwnd;
 				else

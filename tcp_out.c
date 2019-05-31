@@ -69,6 +69,8 @@ void tcp_send_packet(struct tcp_sock *tsk, char *packet, int len)
 
 
     tsk->snd_nxt += tcp_data_len;
+	++tsk->tot_pkt_snd;
+	tsk->average = tsk->snd_nxt / tsk->tot_pkt_snd;
 	log(DEBUG, "tcp_sent_packet: send a data pkt with len %d tsk->snd_nxt %u!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!",tcp_data_len, tsk->snd_nxt);
     //tsk->snd_wnd -= tcp_data_len;             源代码中有的，觉得有问题所以注释掉
     

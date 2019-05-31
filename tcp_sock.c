@@ -71,6 +71,8 @@ struct tcp_sock *alloc_tcp_sock()
 	tsk->rcv_buf = alloc_ring_buffer(tsk->rcv_wnd);
 	tsk->snd_wnd = MSS;
 	tsk->cwnd = 1;
+	tsk->tot_pkt_snd = 0;
+	tsk->average = MSS;
 	tsk->ssthresh = 8;
 
 	tsk->wait_connect = alloc_wait_struct();

@@ -67,7 +67,8 @@ void tcp_scan_timer_list()
 //				log(DEBUG, "tcp_scan_timer_list: timeout at a retranstimer.33333333333333");
                	tsk->cwnd = 1;
 //				log(DEBUG, "tcp_scan_timer_list: timeout at a retranstimer.44444444444444");
-                tsk->cstate = TCP_COPEN;
+                tsk->cstate = TCP_CLOSS;
+                tsk->lp = tsk->snd_nxt;
 //				log(DEBUG, "tcp_scan_timer_list: timeout at a retranstimer.55555555555555");
 
                 resend(tsk);
@@ -160,7 +161,6 @@ void *tcp_cwnd_plot_thread(void *arg)
 //		if (i % 30 == 0)
 //		fprintf(file, "\n");
 	}
-	fprintf(file, "done.\n");
 	fclose(file);
 
 	return NULL;
