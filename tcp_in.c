@@ -78,8 +78,13 @@ void tcp_process(struct tcp_sock *tsk, struct tcp_cb *cb, char *packet)
 		log(ERROR, "tcp_process: recv a packet with invalid seq.");
 		//如果收到重复的包，可能是ack丢了，重新发送.             
 		//buf 记录，如果是收到比超过接收窗口的包就不能发重复确认
-		if (less_than_32b(cb->seq, tsk->rcv_nxt))
-			tcp_send_control_packet(tsk, TCP_ACK);			
+		if (less_than_32b(cb->seq, tsk->rcv_nxt)) 
+		{
+			if (tsk->state == TCP_SYN_RECV)
+				resend(tsk);
+			else
+				tcp_send_control_packet(tsk, TCP_ACK);			
+		}
 		return;
 	}
 	if (!(cb->flags & (TCP_SYN|TCP_FIN)) && !(cb->flags & TCP_ACK)) 
@@ -189,8 +194,8 @@ void tcp_process(struct tcp_sock *tsk, struct tcp_cb *cb, char *packet)
 //congestion control with tcp_in
 void tcp_cc_in(struct tcp_sock *tsk, struct tcp_cb *cb) {
 	if (cb->ack > tsk->snd_una) { 	//收到新数据的确认
-//		tcp_set_retrans_timer(tsk);
 		log(DEBUG, "tcp_cc_in:  recv a new ack.");
+		tsk->snd_una = cb->ack;
 		switch(tsk->cstate) 
 		{
 			case TCP_COPEN:
@@ -203,9 +208,7 @@ void tcp_cc_in(struct tcp_sock *tsk, struct tcp_cb *cb) {
 					tsk->cwnd += (1/tsk->cwnd);
 				log(DEBUG, "tcp_cc_in:  recv a new ack.now the cwnd is %f $0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000", tsk->cwnd);
 				
-				tsk->snd_una = cb->ack;
-//				tsk->inflight = tsk->snd_nxt - tsk->snd_una;			//update inflight
-				tsk->inflight = max(tsk->inflight-1, 0);
+//				tsk->inflight = (tsk->snd_nxt - tsk->snd_una) / MSS;			//update inflight
 				log(DEBUG, "tcp_cc_in:  recv a new ack.now the inflight is %d $000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000", tsk->inflight);
 				if (tsk->cstate != TCP_COPEN)
 					tsk->cstate = TCP_COPEN;
@@ -220,6 +223,7 @@ void tcp_cc_in(struct tcp_sock *tsk, struct tcp_cb *cb) {
 				tsk->cwnd += (1/tsk->cwnd);
 				break;
 		}
+		tsk->inflight = min(tsk->inflight-1, (tsk->snd_nxt - tsk->snd_una) / MSS);
 	}
 
 	else if (cb->ack == tsk->snd_una && cb->flags != (TCP_PSH|TCP_ACK))
