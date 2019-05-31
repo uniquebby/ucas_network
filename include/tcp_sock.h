@@ -90,6 +90,8 @@ struct tcp_sock {
     int allowed_send;
     //recovery_point
     u32 rp;
+	//快重传时的标志，0代表cwnd下降阶段，1代表上升阶段
+	int fr_flag; 
 	//loss point
 	u32 lp;
 

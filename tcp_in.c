@@ -222,11 +222,17 @@ void tcp_cc_in(struct tcp_sock *tsk, struct tcp_cb *cb) {
 				break;
 			case TCP_CPR:
 				update_snd_buf(tsk, cb);
+				if (tsk->fr_flag == 1)
+					tsk->cwnd += (1/tsk->cwnd);
+				else if (tsk->cwnd > tsk->ssthresh)
+					tsk->cwnd -= 0.5;
+				else
+					tsk->fr_flag = 1;
+
 				if (cb->ack < tsk->rp)	
 					resend(tsk);	
 				else
 					tsk->cstate = TCP_COPEN;
-				tsk->cwnd += (1/tsk->cwnd);
 				break;
 		}
 		tsk->inflight = min(tsk->inflight-1, (tsk->snd_nxt - tsk->snd_una) / tsk->average);
@@ -262,12 +268,19 @@ void tcp_cc_in(struct tcp_sock *tsk, struct tcp_cb *cb) {
 				break;
 			case TCP_CRECOVERY:
            	    tsk->ssthresh = max(((u32)(tsk->cwnd / 2)), 1);
-				tsk->cwnd = tsk->ssthresh;
+//				tsk->cwnd = tsk->ssthresh;
+				tsk->fr_flag = 0;
+				tsk->cwnd -= 0.5;
 				tsk->rp = tsk->snd_nxt;
 				resend(tsk);
 				tsk->cstate = TCP_CPR;
 			case TCP_CPR:
-				tsk->cwnd += (1/tsk->cwnd);
+				if (tsk->fr_flag == 1)
+					tsk->cwnd += (1/tsk->cwnd);
+				else if (tsk->cwnd > tsk->ssthresh)
+					tsk->cwnd -= 0.5;
+				else
+					tsk->fr_flag = 1;
 				break;
 			default:
 				break;
