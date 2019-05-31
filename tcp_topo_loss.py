@@ -11,7 +11,7 @@ class TCPTopo(Topo):
         h2 = self.addHost('h2')
 
         # Delay: 1ms, Packet Drop Rate: 5%
-        self.addLink(h1, h2, delay='1ms', loss=0.01, bw=100)
+        self.addLink(h1, h2, delay='1ms', loss=0.05, bw=100)
 
 if __name__ == '__main__':
     topo = TCPTopo()
