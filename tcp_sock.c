@@ -73,7 +73,7 @@ struct tcp_sock *alloc_tcp_sock()
 	tsk->cwnd = 1;
 	tsk->tot_pkt_snd = 0;
 	tsk->average = MSS;
-	tsk->ssthresh = 8;
+	tsk->ssthresh = 16;
 
 	tsk->wait_connect = alloc_wait_struct();
 	tsk->wait_accept = alloc_wait_struct();
